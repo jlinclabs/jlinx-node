@@ -22,12 +22,11 @@
   },
   "homepage": "https://github.com/jlinclabs/jlinx#readme",
   "dependencies": {
-    "@jlinc/jwt": "^1.0.3",
     "autobase": "^1.0.0-alpha.8",
     "corestore": "^6.0.1-alpha.9",
     "debug": "^4.3.4",
     "hyperswarm": "github:hyperswarm/hyperswarm#v3.0.4",
-    "jlinx-core": "file:../core",
+    "jlinx-core": "github:jlinclabs/jlinx-core",
     "node-fetch": "^3.2.4",
     "urlsafe-base64": "^1.0.0"
   }
