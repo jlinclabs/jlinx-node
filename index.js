@@ -6,8 +6,6 @@ import Ledger from './Ledger.js'
 
 const debug = Debug('jlinx:agent')
 
-// AKA LocalJlinxServer
-// AKA JlinxHypercoreClient
 export default class JlinxServer {
 
   constructor(opts){
