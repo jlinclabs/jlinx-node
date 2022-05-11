@@ -1,23 +1,22 @@
-import { createSigningKeyPair, keyToBuffer, keyToDid, didToKey } from 'jlinx-core/util.js'
+import Debug from 'debug'
+import Path from 'path'
+import { createRandomString, keyToDid, didToKey } from 'jlinx-core/util.js'
 import HypercoreClient from './HypercoreClient.js'
-import DidDocument from './DidDocument.js'
+import Ledger from './Ledger.js'
+
+const debug = Debug('jlinx:agent')
 
 // AKA LocalJlinxServer
 // AKA JlinxHypercoreClient
 export default class JlinxServer {
 
   constructor(opts){
+    this.publicKey = opts.publicKey
+    if (!this.publicKey) throw new Error(`${this.constructor.name} requires 'publicKey'`)
     this.storagePath = opts.storagePath
-    if (!this.storagePath)
-      throw new Error(`JlinxServer requires a storagePath`)
-        // this.server = opts.servers // get from config
-    this.keystore = opts.keystore || new Keystore({
-      storagePath: Path.join(this.storagePath, 'keys'),
-    })
-    this.hypercore = new HypercoreClient({
-      storagePath: this.storagePath,
-    })
-    // super({ storagePath })
+    if (!this.storagePath) throw new Error(`${this.constructor.name} requires 'storagePath'`)
+    this.keys = opts.keys || new KeyStore(Path.join(this.storagePath, 'keys'))
+    this.dids = opts.dids || new DidStore(Path.join(this.storagePath, 'dids'))
   }
 
   [Symbol.for('nodejs.util.inspect.custom')](depth, opts){
@@ -31,52 +30,102 @@ export default class JlinxServer {
       indent + ')'
   }
 
-  async ready(){
-    await this.hypercore.ready()
+  ready(){
+    if (!this._ready) this._ready = (async () => {
+      const keyPair = await this.keys.get(this.publicKey)
+      if (!keyPair || !keyPair.secretKey)
+        throw new Error(`unable to get agents secret key for ${this.publicKey}`)
+      this.hypercore = new HypercoreClient({
+        storagePath: Path.join(this.storagePath, 'cores'),
+        keyPair: await this.keys.get(this.publicKey),
+      })
+      debug('ready')
+    })()
+    return this._ready
   }
 
-  async resolveDid(did, secretKey){
-    // const publicKey = didToPublicKey(did)
+  async connected(){
     await this.ready()
-    console.log('this.hypercore.getCore', this.hypercore.getCore)
-    const core = await this.hypercore.getCore(didToKey(did), secretKey)
-    await core.update()
-    const didDocument = new DidDocument(did, core)
-    // await didDocument.update() // ??
-    if (await didDocument.exists()) return didDocument
+    await this.hypercore.connected()
+  }
+
+  async destroy(){
+    this.hypercore.destroy()
+  }
+
+  async getLedger(did){
+    await this.ready()
+    const publicKey = didToKey(did)
+    const keyPair = await this.keys.get(publicKey)
+    const secretKey = keyPair && keyPair.type === 'signing'
+      ? keyPair.secretKey : undefined
+    const core = await this.hypercore.getCore(publicKey, secretKey)
+    const ledger = new Ledger(did, core)
+    await ledger.ready()
+    return ledger
+  }
+
+  async resolveDid(did){
+    await this.ready()
+    debug('resolving did', { did })
+    const ledger = await this.getLedger(did)
+    debug(ledger)
+    if (await ledger.exists())
+      return await ledger.getValue()
+    await this.connected()
+    await this.hypercore.hasPeers()
+    debug('resolving did via swarm', { did })
+    if (await ledger.exists())
+      return await ledger.getValue()
   }
 
   async createDid(){
-    const { publicKey, secretKey } = await this.keystore.createSigningKeyPair()
+    const { publicKey } = await this.keys.createSigningKeyPair()
     const did = keyToDid(publicKey)
-    const core = await this.hypercore.getCore(publicKey, secretKey)
-
-    // initialize the core
-    await core.append([
-      JSON.stringify({
-        jlinx: '1.0.0',
-        type: 'jlinx-did-document-v1',
-        created: new Date,
-      })
-    ])
-    await core.update()
-    return { did }
-    // // await this.ready()
-    // // const didSigningKeyPair = createKeyPair() // when do we do this if its doable on another machine?
-    // // const hypercoreKeyPair = createSigningKeyPair()
-    // const did = keyToDid(didKeyPair.publicKey)
-    // const core = await this.hypercore.getCore(didKeyPair.publicKey, didKeyPair.secretKey)
-    // const didDocument = new DidDocument(did, { server: this })
-    // await didDocument.create()
-    // return didDocument
+    debug(`creating did=${did}`)
+    const didDocument = await this.getLedger(did)
+    const secret = createRandomString(32)
+    await didDocument.initialize({
+      type: 'jlinx-did-document-v1',
+      secret,
+    })
+    debug('created did', { did, didDocument, secret })
+    return { did, secret }
   }
 
-  async updateDid(did, value){
-    const publicKey = didToKey(did)
-    const secretKey = await this.keystore.get(publicKey)
-    const core = await this.hypercore.getCore(publicKey, secretKey)
-    core.append([JSON.stringify(value)])
+  async amendDid({did, secret, value}){
+    debug('amendDid', { did, secret, value })
+    const didDocument = await this.getLedger(did)
+    debug('amendDid', { didDocument })
+    await didDocument.update()
+    debug('HEADER', didDocument.header)
+    if (didDocument.header.secret !== secret)
+      throw new Error(`new did secret mismatch!`)
+    const before = await didDocument.getValue()
+    await didDocument.setValue(value)
+    const after = await didDocument.getValue()
+    debug('amended did', { did, before, after })
+    return after
   }
+
+
 
 }
 
+
+// async function isDidCore(core){
+//   try{
+//     await core.update()
+//     if (core.length === 0) {
+//       debug('isDidCore empty')
+//       return false
+//     }
+//     let header = await core.get(0)
+//     header = JSON.parse(header)
+//     debug({ header })
+//     return header.jlinx && header.type.startsWith('jlinx-did-document-')
+//   }catch(error){
+//     debug('isDidCore error', error)
+//     return false
+//   }
+// }
