@@ -1,5 +1,7 @@
 import Debug from 'debug'
 import Path from 'path'
+import KeyStore from 'jlinx-core/KeyStore.js'
+import DidStore from 'jlinx-core/DidStore.js'
 import { createRandomString, keyToDid, didToKey } from 'jlinx-core/util.js'
 import HypercoreClient from './HypercoreClient.js'
 import Ledger from './Ledger.js'
@@ -58,13 +60,21 @@ export default class JlinxServer {
     return this.hypercore.getCore(publicKey, secretKey)
   }
 
+  // async create () {
+  //   const jlinxCore = new JlinxCore({})
+  //   return jlinxCore
+  // }
+
+  // async get (publicKeyString) {
+  //   this.hypercore.getCore(publicKeyString)
+
+  //   return jlinxCore
+  // }
+
   async getLedger (did) {
     await this.ready()
     const publicKey = didToKey(did)
-    const keyPair = await this.keys.get(publicKey)
-    const secretKey = keyPair && keyPair.type === 'signing'
-      ? keyPair.secretKey : undefined
-    const core = await this.hypercore.getCore(publicKey, secretKey)
+    const core = await this.getCore(publicKey)
     const ledger = new Ledger(did, core)
     await ledger.ready()
     return ledger

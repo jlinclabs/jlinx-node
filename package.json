@@ -5,7 +5,7 @@
   "description": "DIDs on Hypercore",
   "main": "index.js",
   "scripts": {
-    "test": "./scripts/test"
+    "test": "standard && tape test/*.js"
   },
   "repository": {
     "type": "git",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "standard": "^17.0.0",
-    "tape": "^5.5.3"
+    "tape": "^5.5.3",
+    "tmp-promise": "^3.0.3"
   }
 }
