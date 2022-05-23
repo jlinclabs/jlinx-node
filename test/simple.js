@@ -1,4 +1,5 @@
 import test from 'tape'
+import { isJlinxDid, keyToMultibase } from 'jlinx-core/util.js'
 import { generateInstance } from './helpers/index.js'
 
 test('creating a MicroLedger', async t => {
@@ -24,9 +25,9 @@ test('creating a MicroLedger', async t => {
 
   t.same(events1.length, 3)
   t.deepEqual(await events1.all(), [
-    { eventThree: 3 },
+    { eventOne: 1 },
     { eventTwo: 2 },
-    { eventOne: 1 }
+    { eventThree: 3 }
   ])
 
   t.end()
@@ -39,16 +40,82 @@ test('creating a KeyValueStore', async t => {
   t.same(db.version, 1)
   t.deepEqual(await db.all(), {})
 
-  await db.set('name', 'Larry David')
+  await db.set({
+    name: 'Larry David'
+  })
   t.same(await db.get('name'), 'Larry David')
-
   t.deepEqual(await db.all(), {
     name: 'Larry David'
   })
 
-  console.log(db)
+  await db.set({
+    age: 84,
+    favoriteColor: 'orange'
+  })
+
+  t.deepEqual(await db.all(), {
+    name: 'Larry David',
+    age: 84,
+    favoriteColor: 'orange'
+  })
+
+  const db2 = await jlinx.get(db.id)
+  t.notSame(db, db2)
+
+  t.deepEqual(await db2.all(), {
+    name: 'Larry David',
+    age: 84,
+    favoriteColor: 'orange'
+  })
 
   t.end()
 })
 
-// TODO: Add a test case that links directly to the links of a previous input node.
+test('creating a DidDocument', async t => {
+  const jlinx = await generateInstance()
+  const didDocument = await jlinx.create('DidDocument')
+  await didDocument.update()
+
+  t.ok(isJlinxDid(didDocument.did))
+  t.ok(didDocument.did.endsWith(didDocument.id))
+
+  t.deepEqual(didDocument.value, {
+    '@context': 'https://www.w3.org/ns/did/v1',
+    id: didDocument.did,
+    created: didDocument.created
+  })
+
+  const signingKeyPair = await jlinx.keys.createSigningKeyPair()
+  const encryptingKeyPair = await jlinx.keys.createEncryptingKeyPair()
+  await didDocument.addKeys(
+    { type: 'signing', publicKey: signingKeyPair.publicKey },
+    { type: 'encrypting', publicKey: encryptingKeyPair.publicKey }
+  )
+
+  await didDocument.update()
+
+  t.deepEqual(didDocument.value, {
+    '@context': 'https://www.w3.org/ns/did/v1',
+    id: didDocument.did,
+    created: didDocument.created,
+    verificationMethod: [
+      {
+        id: `${didDocument.did}#signing`,
+        type: 'Ed25519VerificationKey2020',
+        controller: `${didDocument.did}`,
+        publicKeyMultibase: keyToMultibase(signingKeyPair.publicKey)
+      }
+    ],
+    authentication: [
+      `${didDocument.did}#signing`
+    ],
+    keyAgreement: [
+      {
+        id: `${didDocument.did}#encrypting`,
+        type: 'X25519KeyAgreementKey2019',
+        controller: `${didDocument.did}`,
+        publicKeyMultibase: keyToMultibase(encryptingKeyPair.publicKey)
+      }
+    ]
+  })
+})

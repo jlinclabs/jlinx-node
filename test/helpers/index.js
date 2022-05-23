@@ -13,7 +13,7 @@ export async function getTmpDirPath () {
   return path
 }
 
-export async function generateInstance(){
+export async function generateInstance () {
   const keyPair = createSigningKeyPair()
   const jlinx = new JlinxServer({
     publicKey: keyToString(keyPair.publicKey),
