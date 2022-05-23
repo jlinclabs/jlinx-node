@@ -10,10 +10,33 @@ test('jlinx server should work like this', async t => {
     publicKey: keyToString(keyPair.publicKey),
     storagePath: await getTmpDirPath()
   })
-  console.log(jlinx)
   await jlinx.keys.set(keyPair)
   await jlinx.ready()
-  console.log(jlinx)
+  const events1 = await jlinx.create('MicroLedger')
+  t.same(events1.writable, true)
+  t.same(events1.length, 0)
+  t.deepEqual(await events1.all(), [])
+
+  await events1.append([
+    { eventOne: 1 }
+  ])
+  t.same(events1.length, 1)
+  t.deepEqual(await events1.all(), [
+    { eventOne: 1 }
+  ])
+
+  await events1.append([
+    { eventTwo: 2 },
+    { eventThree: 3 }
+  ])
+  console.log(await events1.all())
+  t.same(events1.length, 3)
+  t.deepEqual(await events1.all(), [
+    { eventThree: 3 },
+    { eventTwo: 2 },
+    { eventOne: 1 }
+  ])
+
   t.end()
 })
 
