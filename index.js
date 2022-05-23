@@ -7,8 +7,7 @@ import Ledger from './Ledger.js'
 const debug = Debug('jlinx:agent')
 
 export default class JlinxServer {
-
-  constructor(opts){
+  constructor (opts) {
     this.publicKey = opts.publicKey
     if (!this.publicKey) throw new Error(`${this.constructor.name} requires 'publicKey'`)
     this.storagePath = opts.storagePath
@@ -17,41 +16,49 @@ export default class JlinxServer {
     this.dids = opts.dids || new DidStore(Path.join(this.storagePath, 'dids'))
   }
 
-  [Symbol.for('nodejs.util.inspect.custom')](depth, opts){
+  [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
     let indent = ''
-    if (typeof opts.indentationLvl === 'number')
-      while (indent.length < opts.indentationLvl) indent += ' '
+    if (typeof opts.indentationLvl === 'number') { while (indent.length < opts.indentationLvl) indent += ' ' }
     return this.constructor.name + '(\n' +
+      indent + '  publicKey: ' + opts.stylize(this.publicKey, 'string') + '\n' +
       indent + '  storagePath: ' + opts.stylize(this.storagePath, 'string') + '\n' +
       // indent + '  cores: ' + opts.stylize(this.corestore.cores.size, 'number') + '\n' +
       // indent + '  writable: ' + opts.stylize(this.writable, 'boolean') + '\n' +
       indent + ')'
   }
 
-  ready(){
-    if (!this._ready) this._ready = (async () => {
-      const keyPair = await this.keys.get(this.publicKey)
-      if (!keyPair || !keyPair.secretKey)
-        throw new Error(`unable to get agents secret key for ${this.publicKey}`)
-      this.hypercore = new HypercoreClient({
-        storagePath: Path.join(this.storagePath, 'cores'),
-        keyPair: await this.keys.get(this.publicKey),
-      })
-      debug('ready')
-    })()
+  ready () {
+    if (!this._ready) {
+      this._ready = (async () => {
+        const keyPair = await this.keys.get(this.publicKey)
+        if (!keyPair || !keyPair.secretKey) { throw new Error(`unable to get agents secret key for ${this.publicKey}`) }
+        this.hypercore = new HypercoreClient({
+          storagePath: Path.join(this.storagePath, 'cores'),
+          keyPair: await this.keys.get(this.publicKey)
+        })
+        debug('ready')
+      })()
+    }
     return this._ready
   }
 
-  async connected(){
+  async connected () {
     await this.ready()
     await this.hypercore.connected()
   }
 
-  async destroy(){
+  async destroy () {
     this.hypercore.destroy()
   }
 
-  async getLedger(did){
+  async getCore (publicKey) {
+    let secretKey
+    const keyPair = await this.keys.get(publicKey)
+    if (keyPair && keyPair.type === 'signing') secretKey = keyPair.secretKey
+    return this.hypercore.getCore(publicKey, secretKey)
+  }
+
+  async getLedger (did) {
     await this.ready()
     const publicKey = didToKey(did)
     const keyPair = await this.keys.get(publicKey)
@@ -63,21 +70,19 @@ export default class JlinxServer {
     return ledger
   }
 
-  async resolveDid(did){
+  async resolveDid (did) {
     await this.ready()
     debug('resolving did', { did })
     const ledger = await this.getLedger(did)
     debug(ledger)
-    if (await ledger.exists())
-      return await ledger.getValue()
+    if (await ledger.exists()) { return await ledger.getValue() }
     await this.connected()
     await this.hypercore.hasPeers()
     debug('resolving did via swarm', { did })
-    if (await ledger.exists())
-      return await ledger.getValue()
+    if (await ledger.exists()) { return await ledger.getValue() }
   }
 
-  async createDid(){
+  async createDid () {
     const { publicKey } = await this.keys.createSigningKeyPair()
     const did = keyToDid(publicKey)
     debug(`creating did=${did}`)
@@ -85,31 +90,26 @@ export default class JlinxServer {
     const secret = createRandomString(32)
     await didDocument.initialize({
       type: 'jlinx-did-document-v1',
-      secret,
+      secret
     })
     debug('created did', { did, didDocument, secret })
     return { did, secret }
   }
 
-  async amendDid({did, secret, value}){
+  async amendDid ({ did, secret, value }) {
     debug('amendDid', { did, secret, value })
     const didDocument = await this.getLedger(did)
     debug('amendDid', { didDocument })
     await didDocument.update()
     debug('HEADER', didDocument.header)
-    if (didDocument.header.secret !== secret)
-      throw new Error(`new did secret mismatch!`)
+    if (didDocument.header.secret !== secret) { throw new Error('new did secret mismatch!') }
     const before = await didDocument.getValue()
     await didDocument.setValue(value)
     const after = await didDocument.getValue()
     debug('amended did', { did, before, after })
     return after
   }
-
-
-
 }
-
 
 // async function isDidCore(core){
 //   try{

@@ -9,17 +9,15 @@ const packageJson = JSON.parse(fs.readFileSync(Path.join(fileURLToPath(import.me
 const VERSION = packageJson.version
 
 export default class Ledger {
-
-  constructor(did, core){
+  constructor (did, core) {
     this.did = did
     this.publicKey = didToKey(did)
     this.core = core
   }
 
-  [Symbol.for('nodejs.util.inspect.custom')](depth, opts){
+  [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
     let indent = ''
-    if (typeof opts.indentationLvl === 'number')
-      while (indent.length < opts.indentationLvl) indent += ' '
+    if (typeof opts.indentationLvl === 'number') { while (indent.length < opts.indentationLvl) indent += ' ' }
     return this.constructor.name + '(\n' +
       indent + '  did: ' + opts.stylize(this.did, 'string') + '\n' +
       indent + '  length: ' + opts.stylize(this.length, 'number') + '\n' +
@@ -32,60 +30,59 @@ export default class Ledger {
       indent + ')'
   }
 
-  get writable(){ return this.core.writable }
-  get length(){ return this.core.length }
+  get writable () { return this.core.writable }
+  get length () { return this.core.length }
 
-  async update(){
+  async update () {
     await this.core.update()
-    if (keyToString(this.core.key) !== this.publicKey)
-      throw new Error(`key mismatch ${[keyToString(this.core.key), this.publicKey]}`)
+    if (keyToString(this.core.key) !== this.publicKey) { throw new Error(`key mismatch ${[keyToString(this.core.key), this.publicKey]}`) }
     this.loaded = true
     this.initialized = this.core.length > 0
-    if (this.initialized){
+    if (this.initialized) {
       const headerJson = await this.core.get(0)
       this.header = JSON.parse(headerJson)
       this.type = this.header.type
     }
   }
 
-  async ready(){
+  async ready () {
     await this.update()
   }
 
-  async exists(){
+  async exists () {
     await this.update()
     return this.initialized
   }
 
-  async append(...events){
+  async append (...events) {
     return await this.core.append(
       events.map(event =>
         JSON.stringify({
           ...event,
           jlinxVersion: VERSION,
-          at: new Date,
+          at: new Date()
         })
       )
     )
   }
 
-  async initialize(header){
+  async initialize (header) {
     await this.update()
     if (this.initialized) throw new Error(`did=${this.did} already initialized`)
     await this.append(header)
   }
 
-  async setValue(changes){
+  async setValue (changes) {
     await this.append({ eventType: 'amend', changes })
   }
 
-  async getEvent(index){
+  async getEvent (index) {
     const json = await this.core.get(index)
     debug('event', { index, json })
     return JSON.parse(json)
   }
 
-  async getEvents(){
+  async getEvents () {
     await this.update()
     const length = this.core.length - 1 // -1 to skip header
     const entries = await Promise.all(
@@ -95,20 +92,16 @@ export default class Ledger {
     return entries
   }
 
-  applyEvent(value, event){
-    if (event && event.eventType === 'amend')
-      return Object.assign({}, value, event.changes)
-    else
-      return value
+  applyEvent (value, event) {
+    if (event && event.eventType === 'amend') { return Object.assign({}, value, event.changes) } else { return value }
   }
 
-  async getValue(){
+  async getValue () {
     const events = await this.getEvents()
     debug({ events })
     if (events.length === 0) return
     let value = {}
-    for (const entry of events)
-      value = this.applyEvent(value, entry, events)
+    for (const entry of events) { value = this.applyEvent(value, entry, events) }
     return value
   }
 }

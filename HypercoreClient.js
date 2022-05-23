@@ -1,16 +1,14 @@
 import Debug from 'debug'
-import Path from 'path'
 import Corestore from 'corestore'
 import Hyperswarm from 'hyperswarm'
-import crypto from 'hypercore-crypto'
 import dht from '@hyperswarm/dht'
-import { keyToString, keyToBuffer, keyToDid } from 'jlinx-core/util.js'
+import { keyToString, keyToBuffer } from 'jlinx-core/util.js'
 import topic from 'jlinx-core/topic.js'
 
 const debug = Debug('jlinx:hypercore')
 
 export default class HypercoreClient {
-  constructor(opts = {}){
+  constructor (opts = {}) {
     this.keyPair = opts.keyPair
     if (!this.keyPair) throw new Error(`${this.constructor.name} requires 'keyPair'`)
     this.storagePath = opts.storagePath
@@ -19,17 +17,17 @@ export default class HypercoreClient {
     this.corestore = new Corestore(this.storagePath)
   }
 
-  async connect(){
+  async connect () {
     if (this._connecting) return await this._connecting
 
     if (this.destroyed) {
-      console.trace(`ALREADY DESTROYED`)
-      throw new Error(`ALREADY DESTROYED`)
+      console.trace('ALREADY DESTROYED')
+      throw new Error('ALREADY DESTROYED')
     }
 
-    debug(`HypercoreClient connecting to hyperswarm`)
+    debug('HypercoreClient connecting to hyperswarm')
     this.swarm = new Hyperswarm({
-      keyPair: this.keyPair,
+      keyPair: this.keyPair
       // seed: this.seed,
       // bootstrap: [
       //   { host: '127.0.0.1', port: 49736 },
@@ -37,7 +35,7 @@ export default class HypercoreClient {
     })
     this.swarmKey = keyToString(this.swarm.keyPair.publicKey)
 
-    debug(`connecting to swarm as`, this.swarmKey)
+    debug('connecting to swarm as', this.swarmKey)
 
     process.on('SIGTERM', () => { this.destroy() })
 
@@ -48,7 +46,7 @@ export default class HypercoreClient {
       )
       // Is this what we want?
       this.corestore.replicate(conn, {
-        keepAlive: true,
+        keepAlive: true
         // live?
       })
     })
@@ -63,12 +61,12 @@ export default class HypercoreClient {
     // debug('listening…')
   }
 
-  async connected(){
+  async connected () {
     if (!this._connecting) await this.connect()
     await this._connecting
   }
 
-  async hasPeers(){
+  async hasPeers () {
     debug('has peers (called)')
     await this.connected()
     debug('has peers?', this.swarm.connections.size)
@@ -77,16 +75,16 @@ export default class HypercoreClient {
     await this.swarm.flush()
   }
 
-  async ready(){
+  async ready () {
     if (!this._ready) await this.connect()
     await this._ready
   }
 
-  async destroy(){
+  async destroy () {
     if (this.destroyed) return
     debug('destroying!')
     this.destroyed = true
-    if (this.swarm){
+    if (this.swarm) {
       debug('disconnecting from swarm')
       // debug('connections.size', this.swarm.connections.size)
       // debug('swarm.flush()')
@@ -98,18 +96,18 @@ export default class HypercoreClient {
       await this.swarm.destroy()
       // debug('swarm destroyed. disconnected?')
       // debug('connections.size', this.swarm.connections.size)
-      for (const conn of this.swarm.connections){
+      for (const conn of this.swarm.connections) {
         debug('disconnecting dangling connection')
         conn.destroy()
       }
     }
   }
 
-  async status(){
+  async status () {
     const status = {}
     status.numberOfCores = this.corestore.cores.size
-    if (this.swarm){
-      if (this.swarm.peers){
+    if (this.swarm) {
+      if (this.swarm.peers) {
         status.numberOfPeers = this.swarm.peers.size
         status.connected = this.swarm.peers.size > 0
       }
@@ -118,14 +116,14 @@ export default class HypercoreClient {
         const core = this.corestore.cores.get(key)
         return {
           key: keyToString(core.key),
-          length: core.length,
+          length: core.length
         }
       })
     }
     return status
   }
 
-  async getCore(key, secretKey){
+  async getCore (key, secretKey) {
     const core = this.corestore.get({ key: keyToBuffer(key), secretKey })
     // await core.update()
     return core
