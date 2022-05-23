@@ -1,17 +1,9 @@
 import test from 'tape'
-import { keyToString, createSigningKeyPair } from 'jlinx-core/util.js'
-import { getTmpDirPath } from './helpers/index.js'
-import JlinxServer from '../index.js'
+import { generateInstance } from './helpers/index.js'
 
-test('jlinx server should work like this', async t => {
-  const keyPair = createSigningKeyPair()
+test('creating a MicroLedger', async t => {
+  const jlinx = await generateInstance()
 
-  const jlinx = new JlinxServer({
-    publicKey: keyToString(keyPair.publicKey),
-    storagePath: await getTmpDirPath()
-  })
-  await jlinx.keys.set(keyPair)
-  await jlinx.ready()
   const events1 = await jlinx.create('MicroLedger')
   t.same(events1.writable, true)
   t.same(events1.length, 0)
@@ -29,13 +21,32 @@ test('jlinx server should work like this', async t => {
     { eventTwo: 2 },
     { eventThree: 3 }
   ])
-  console.log(await events1.all())
+
   t.same(events1.length, 3)
   t.deepEqual(await events1.all(), [
     { eventThree: 3 },
     { eventTwo: 2 },
     { eventOne: 1 }
   ])
+
+  t.end()
+})
+
+test('creating a KeyValueStore', async t => {
+  const jlinx = await generateInstance()
+  const db = await jlinx.create('KeyValueStore')
+  t.same(db.writable, true)
+  t.same(db.version, 1)
+  t.deepEqual(await db.all(), {})
+
+  await db.set('name', 'Larry David')
+  t.same(await db.get('name'), 'Larry David')
+
+  t.deepEqual(await db.all(), {
+    name: 'Larry David'
+  })
+
+  console.log(db)
 
   t.end()
 })

@@ -1,6 +1,7 @@
 import Debug from 'debug'
 import Path from 'path'
 import fs from 'fs'
+import Hyperbee from 'hyperbee'
 import { fileURLToPath } from 'url'
 import { coreToKey, keyToString } from 'jlinx-core/util.js'
 
@@ -93,8 +94,50 @@ class MicroLedger extends JlinxDocument {
   }
 }
 
+class KeyValueStore extends JlinxDocument {
+  constructor (opts) {
+    super(opts)
+    this.hyperbee = new Hyperbee(this.core, {
+      keyEncoding: 'utf-8',
+      valueEncoding: 'json'
+    })
+  }
+
+  get version (){ return this.hyperbee.version }
+  async get (key){
+    debug('KeyValueStore.get', key)
+    const x = await this.hyperbee.get(key)
+    debug('KeyValueStore.get', x)
+    // const { seq, key, value } = x
+    return x.value
+  }
+
+  async all () {
+    const all = {}
+    // await this.hyperbee.update()
+    const rs = this.hyperbee.createReadStream({
+      reverse: true,
+      limit: this.length,
+    })
+    for await (const { key, value } of rs) {
+      console.log({ key, value })
+      all[key] = value
+    }
+    return all
+  }
+
+  async set (key, value){
+    await this.hyperbee.put(key, value)
+  }
+
+  async del (key){
+    await this.hyperbee.del(key)
+  }
+}
+
 JlinxDocument.types = {
-  MicroLedger
+  MicroLedger,
+  KeyValueStore,
 }
 
 const now = () => (new Date()).toISOString().slice(0, -1)
