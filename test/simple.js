@@ -1,5 +1,5 @@
 import test from 'tape'
-import { isJlinxDid, keyToMultibase } from 'jlinx-util/util.js'
+import { isJlinxDid, keyToMultibase } from 'jlinx-util'
 import { generateInstance } from './helpers/index.js'
 
 test('creating a MicroLedger', async t => {

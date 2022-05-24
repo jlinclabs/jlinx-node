@@ -1,6 +1,4 @@
-# jlinx-server
-
-AKA: Jlinx Node
+# jlinx-node
 
 - connects to the hyperswarm and jlinx topic
 - stores key pairs

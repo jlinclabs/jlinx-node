@@ -1,5 +1,5 @@
 
-import { keyToDid, keyToMultibase } from 'jlinx-util/util.js'
+import { keyToDid, keyToMultibase } from 'jlinx-util'
 import MicroLedger from './MicroLedger.js'
 
 export default class DidDocument extends MicroLedger {

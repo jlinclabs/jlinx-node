@@ -2,7 +2,7 @@ import Debug from 'debug'
 import Path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
-import { didToKey, keyToString } from 'jlinx-util/util.js'
+import { didToKey, keyToString } from 'jlinx-util'
 
 const debug = Debug('jlinx:ledger')
 const packageJson = JSON.parse(fs.readFileSync(Path.join(fileURLToPath(import.meta.url), '../package.json'), 'utf8'))

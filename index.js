@@ -2,7 +2,7 @@ import Debug from 'debug'
 import Path from 'path'
 import KeyStore from 'jlinx-util/KeyStore.js'
 import DidStore from 'jlinx-util/DidStore.js'
-import { didToKey } from 'jlinx-util/util.js'
+import { didToKey } from 'jlinx-util'
 import HypercoreClient from './HypercoreClient.js'
 import JlinxDocument from './JlinxDocument/index.js'
 
