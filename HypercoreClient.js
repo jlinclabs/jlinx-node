@@ -2,8 +2,8 @@ import Debug from 'debug'
 import Corestore from 'corestore'
 import Hyperswarm from 'hyperswarm'
 import dht from '@hyperswarm/dht'
-import { keyToString, keyToBuffer } from 'jlinx-core/util.js'
-import topic from 'jlinx-core/topic.js'
+import { keyToString, keyToBuffer } from 'jlinx-util/util.js'
+import topic from 'jlinx-util/topic.js'
 
 const debug = Debug('jlinx:hypercore')
 

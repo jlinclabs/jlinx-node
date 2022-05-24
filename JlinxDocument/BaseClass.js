@@ -1,4 +1,4 @@
-import { coreToKey, keyToString } from 'jlinx-core/util.js'
+import { coreToKey, keyToString } from 'jlinx-util/util.js'
 
 export default class JlinxDocument {
   constructor (opts) {

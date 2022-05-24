@@ -1,7 +1,7 @@
 import test from 'tape'
 import tmp from 'tmp-promise'
 import fs from 'node:fs/promises'
-import { keyToString, createSigningKeyPair } from 'jlinx-core/util.js'
+import { keyToString, createSigningKeyPair } from 'jlinx-util/util.js'
 import JlinxServer from '../../index.js'
 
 export async function getTmpDirPath () {

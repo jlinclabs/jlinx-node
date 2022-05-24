@@ -1,15 +1,16 @@
 {
-  "name": "jlinx-server",
+  "name": "jlinx-node",
   "type": "module",
   "version": "1.0.0",
   "description": "DIDs on Hypercore",
   "main": "index.js",
   "scripts": {
-    "test": "standard && tape test/*.js"
+    "TODO_test": "standard && tape test/*.js",
+    "test": "tape test/*.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jlinclabs/jlinx.git"
+    "url": "https://github.com/jlinclabs/jlinx-node.git"
   },
   "keywords": [
     "hypercore",
@@ -18,16 +19,16 @@
   "author": "Jared Grippe",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jlinclabs/jlinx/issues"
+    "url": "https://github.com/jlinclabs/jlinx-node/issues"
   },
-  "homepage": "https://github.com/jlinclabs/jlinx#readme",
+  "homepage": "https://github.com/jlinclabs/jlinx-node#readme",
   "dependencies": {
     "autobase": "^1.0.0-alpha.8",
     "corestore": "^6.0.1-alpha.17",
     "debug": "^4.3.4",
     "hyperbee": "^1.8.3",
     "hyperswarm": "github:hyperswarm/hyperswarm#v3.0.4",
-    "jlinx-core": "github:jlinclabs/jlinx-core",
+    "jlinx-util": "github:jlinclabs/jlinx-util",
     "node-fetch": "^3.2.4",
     "urlsafe-base64": "^1.0.0"
   },
