@@ -37,7 +37,8 @@ export default class DidDocument extends MicroLedger {
     const value = {
       '@context': DidDocument.contextUrl,
       id: this.did,
-      created: this.created
+      created: this.created,
+      version: 1,
     }
     for (const event of events) applyEvent(value, event)
     return value
@@ -58,20 +59,27 @@ export default class DidDocument extends MicroLedger {
   }
 }
 
-function applyEvent (didDocument, event) {
-  const did = didDocument.id
+function applyEvent (doc, event) {
+  doc.version++
+  const did = doc.id
+
+  const shove = (key, value) => {
+    if (!doc[key]) doc[key] = []
+    doc[key].push(value)
+  }
+
   if (event.eventType === 'addedKey') {
     if (event.keyType === 'signing') {
-      createAndAppendArray(didDocument, 'verificationMethod', {
+      shove('verificationMethod', {
         id: `${did}#signing`,
         type: 'Ed25519VerificationKey2020',
         controller: did,
         publicKeyMultibase: event.publicKeyMultibase
       })
 
-      createAndAppendArray(didDocument, 'authentication', `${did}#signing`)
+      shove('authentication', `${did}#signing`)
     } else if (event.keyType === 'encrypting') {
-      createAndAppendArray(didDocument, 'keyAgreement', {
+      shove('keyAgreement', {
         id: `${did}#encrypting`,
         type: 'X25519KeyAgreementKey2019',
         controller: did,
@@ -83,10 +91,6 @@ function applyEvent (didDocument, event) {
   } else {
     throw new Error(`unknown event type "${event.eventType}"`)
   }
-  return didDocument
+  return doc
 }
 
-function createAndAppendArray (object, key, value) {
-  object[key] = object[key] || []
-  object[key].push(value)
-}
