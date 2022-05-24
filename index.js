@@ -76,7 +76,9 @@ export default class JlinxServer {
   async get (publicKey) {
     await this.ready()
     const core = await this.getCore(publicKey)
-    if (core) return await JlinxDocument.get({ core })
+    await core.update()
+    if (core.length === 0) return
+    return await JlinxDocument.get({ core })
   }
 
   async resolveDid (did) {
