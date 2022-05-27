@@ -1,12 +1,11 @@
 {
   "name": "jlinx-node",
-  "type": "module",
   "version": "1.0.0",
   "description": "DIDs on Hypercore",
   "main": "index.js",
   "scripts": {
     "lint": "standard",
-    "test": "tape test/*.js"
+    "test": "standard && tape test/*.js"
   },
   "repository": {
     "type": "git",

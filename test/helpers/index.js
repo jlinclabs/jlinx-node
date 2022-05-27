@@ -1,11 +1,11 @@
-import tape from 'tape'
-import tmp from 'tmp-promise'
-import fs from 'node:fs/promises'
-import HyperDHT from '@hyperswarm/dht'
+const tape = require('tape')
+const tmp = require('tmp-promise')
+const fs = require('node:fs/promises')
+const HyperDHT = require('@hyperswarm/dht')
 
-import JlinxNode from '../../index.js'
+const JlinxNode = require('../..')
 
-export async function test (name, fn, _tape = tape) {
+exports.test = async function (name, fn, _tape = tape) {
   return _tape(name, run)
   async function run (t) {
     const bootstrappers = []
@@ -39,7 +39,7 @@ export async function test (name, fn, _tape = tape) {
     const create = async () => {
       const jlinx = new JlinxNode({
         storagePath: await newTmpDir(),
-        bootstrap,
+        bootstrap
       })
       jlinxNodes.push(jlinx)
       // const keyPair = await jlinx.keys.createSigning()
@@ -55,8 +55,8 @@ export async function test (name, fn, _tape = tape) {
     destroy(nodes)
   }
 }
-test.only = (name, fn) => test(name, fn, tape.only)
-test.skip = (name, fn) => test(name, fn, tape.skip)
+exports.test.only = (name, fn) => exports.test(name, fn, tape.only)
+exports.test.skip = (name, fn) => exports.test(name, fn, tape.skip)
 
 function destroy (...nodes) {
   for (const node of nodes) {

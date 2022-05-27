@@ -1,5 +1,5 @@
-import b4a from 'b4a'
-import { test } from './helpers/index.js'
+const b4a = require('b4a')
+const { test } = require('./helpers/index.js')
 
 test('creating a document', async (t, createNode) => {
   const node1 = await createNode()
@@ -10,7 +10,7 @@ test('creating a document', async (t, createNode) => {
 
   await doc1.append([
     b4a.from('one'),
-    b4a.from('two'),
+    b4a.from('two')
   ])
   t.same(doc1.length, 2)
   t.same(await doc1.get(0), b4a.from('one'))
@@ -48,7 +48,6 @@ test('replicating a document', async (t, createNode) => {
   t.end()
 })
 
-
 test('subscribing to changes', async (t, createNode) => {
   const node1 = await createNode()
 
@@ -60,7 +59,7 @@ test('subscribing to changes', async (t, createNode) => {
   })
   t.same(doc1SubCalls.length, 0, 'expect doc1SubCalls to have not been called')
 
-  await doc1.append([ b4a.from('three') ])
+  await doc1.append([b4a.from('three')])
 
   t.same(doc1SubCalls.length, 1, 'expect doc1SubCalls to have been called once')
   t.deepEqual(doc1SubCalls[0], [doc1], 'expect doc1SubCalls to have been called with doc1')

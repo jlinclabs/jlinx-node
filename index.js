@@ -1,14 +1,14 @@
-import Debug from 'debug'
-import Path from 'path'
-import Corestore from 'corestore'
-import Hyperswarm from 'hyperswarm'
-import { keyToString, keyToBuffer, createSigningKeyPair } from 'jlinx-util'
-import topic from 'jlinx-util/topic.js'
+const Debug = require('debug')
+const Path = require('path')
+const Corestore = require('corestore')
+const Hyperswarm = require('hyperswarm')
+const { keyToString, keyToBuffer, createSigningKeyPair } = require('jlinx-util')
 
 const debug = Debug('jlinx:node')
 
-export default class JlinxNode {
+module.exports = class JlinxNode {
   constructor (opts) {
+    this.topic = opts.topic || Buffer.from('thisisthetopicfordidsonhypercore')
     this.publicKey = opts.publicKey
     this.storagePath = opts.storagePath
     if (!this.storagePath) throw new Error(`${this.constructor.name} requires 'storagePath'`)
@@ -39,7 +39,7 @@ export default class JlinxNode {
 
     this.swarm = new Hyperswarm({
       keyPair,
-      bootstrap: this.bootstrap,
+      bootstrap: this.bootstrap
     })
 
     debug('connecting to swarm as', this.publicKey)
@@ -59,8 +59,8 @@ export default class JlinxNode {
       })
     })
 
-    debug(`joining topic: "${topic}"`)
-    this.discovery = this.swarm.join(topic)
+    debug(`joining topic: "${this.topic}"`)
+    this.discovery = this.swarm.join(this.topic)
 
     debug('flushing discovery…')
     this._connected = this.discovery.flushed()
@@ -123,24 +123,23 @@ export default class JlinxNode {
     return new Document(this, core, secretKey)
   }
 
-  async create(){
+  async create () {
     const { publicKey, secretKey } = createSigningKeyPair()
     return await this.get(publicKey, secretKey)
   }
-
 }
 
-
 class Document {
-  constructor(node, core, secretKey){
+  constructor (node, core, secretKey) {
     this.node = node
     this.core = core
     this.secretKey = secretKey
     this.id = keyToString(core.key)
-    this._subs = new Set();
+    this._subs = new Set()
     this.core.on('close', () => this._close())
     this.core.on('append', () => this._onAppend())
   }
+
   get key () { return this.core.key }
   get keyPair () { return this.core.keyPair }
   get writable () { return this.core.writable }
@@ -149,6 +148,7 @@ class Document {
   _close () {
     console.log('??_close', this.key)
   }
+
   _onAppend () {
     this._subs.forEach(handler => {
       Promise.resolve()
@@ -159,13 +159,12 @@ class Document {
     })
   }
 
-  get(index){ return this.core.get(index) }
-  append(blocks){ return this.core.append(blocks) }
-  sub(handler){
+  get (index) { return this.core.get(index) }
+  append (blocks) { return this.core.append(blocks) }
+  sub (handler) {
     this._subs.add(handler)
     return () => { this._subs.delete(handler) }
   }
-
 
   [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
     let indent = ''
