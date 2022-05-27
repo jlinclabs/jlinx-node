@@ -1,98 +1,179 @@
 import Debug from 'debug'
 import Path from 'path'
-import KeyStore from 'jlinx-util/KeyStore.js'
-import DidStore from 'jlinx-util/DidStore.js'
-import { didToKey } from 'jlinx-util'
-import HypercoreClient from './HypercoreClient.js'
-import JlinxDocument from './JlinxDocument/index.js'
+import Corestore from 'corestore'
+import Hyperswarm from 'hyperswarm'
+import { keyToString, keyToBuffer, createSigningKeyPair } from 'jlinx-util'
+import topic from 'jlinx-util/topic.js'
 
-const debug = Debug('jlinx:agent')
+const debug = Debug('jlinx:node')
 
-export default class JlinxServer {
+export default class JlinxNode {
   constructor (opts) {
     this.publicKey = opts.publicKey
-    if (!this.publicKey) throw new Error(`${this.constructor.name} requires 'publicKey'`)
     this.storagePath = opts.storagePath
     if (!this.storagePath) throw new Error(`${this.constructor.name} requires 'storagePath'`)
-    this.keys = opts.keys || new KeyStore(Path.join(this.storagePath, 'keys'))
-    this.dids = opts.dids || new DidStore(Path.join(this.storagePath, 'dids'))
+    this.bootstrap = opts.bootstrap
+    this.cores = opts.cores || new Corestore(Path.join(this.storagePath, 'cores'))
+    this.ready = this._ready
   }
 
   [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
     let indent = ''
     if (typeof opts.indentationLvl === 'number') { while (indent.length < opts.indentationLvl) indent += ' ' }
     return this.constructor.name + '(\n' +
-      indent + '  publicKey: ' + opts.stylize(this.publicKey, 'string') + '\n' +
+      indent + '  swarmKey: ' + opts.stylize(this.swarmKey, 'string') + '\n' +
       indent + '  storagePath: ' + opts.stylize(this.storagePath, 'string') + '\n' +
       // indent + '  cores: ' + opts.stylize(this.corestore.cores.size, 'number') + '\n' +
       // indent + '  writable: ' + opts.stylize(this.writable, 'boolean') + '\n' +
       indent + ')'
   }
 
-  ready () {
-    if (!this._ready) {
-      this._ready = (async () => {
-        const keyPair = await this.keys.get(this.publicKey)
-        if (!keyPair || !keyPair.secretKey) { throw new Error(`unable to get agents secret key for ${this.publicKey}`) }
-        this.hypercore = new HypercoreClient({
-          storagePath: Path.join(this.storagePath, 'cores'),
-          keyPair: await this.keys.get(this.publicKey)
-        })
-        debug('ready')
-      })()
-    }
-    return this._ready
+  async _ready () {
+    if (this.swarm) return
+    // await this.keys.ready()
+    await this.cores.ready()
+
+    // generates the same keypair every time based on cores.primaryKey
+    const keyPair = await this.cores.createKeyPair('keypair')
+    this.publicKey = keyPair.publicKey
+
+    this.swarm = new Hyperswarm({
+      keyPair,
+      bootstrap: this.bootstrap,
+    })
+
+    debug('connecting to swarm as', this.publicKey)
+
+    process.on('SIGTERM', () => { this.destroy() })
+
+    this.swarm.on('connection', (conn) => {
+      debug(
+        'new peer connection from',
+        keyToString(conn.remotePublicKey)
+      )
+      // Is this what we want?
+      // TODO ensure not replicating internal stores like keys db
+      this.cores.replicate(conn, {
+        keepAlive: true
+        // live?
+      })
+    })
+
+    debug(`joining topic: "${topic}"`)
+    this.discovery = this.swarm.join(topic)
+
+    debug('flushing discovery…')
+    this._connected = this.discovery.flushed()
   }
 
   async connected () {
-    await this.ready()
-    await this.hypercore.connected()
+    if (!this._connected) await this.connect()
+    await this._connected
+  }
+
+  async hasPeers () {
+    debug('has peers (called)')
+    await this.connected()
+    debug('has peers?', this.swarm.connections.size)
+    if (this.swarm.connections.size > 0) return
+    debug('waiting for more peers!')
+    await this.swarm.flush()
   }
 
   async destroy () {
-    this.hypercore.destroy()
-  }
-
-  async getCore (publicKey) {
-    await this.ready()
-    let secretKey
-    const keyPair = await this.keys.get(publicKey)
-    if (keyPair && keyPair.type === 'signing') secretKey = keyPair.secretKey
-    return this.hypercore.getCore(publicKey, secretKey)
-  }
-
-  async createCore () {
-    const { publicKeyAsString: publicKey } = await this.keys.createSigningKeyPair()
-    const core = await this.getCore(publicKey)
-    await core.update()
-    return core
-  }
-
-  async create (type) {
-    const core = await this.createCore()
-    return await JlinxDocument.create({ core, type })
-  }
-
-  async get (publicKey) {
-    await this.ready()
-    const core = await this.getCore(publicKey)
-    await core.update()
-    if (core.length === 0) return
-    return await JlinxDocument.get({ core })
-  }
-
-  async resolveDid (did) {
-    const didDocument = await this.get(didToKey(did))
-    if (didDocument) {
-      await didDocument.update()
-      return didDocument.value
+    if (this.destroyed) return
+    debug('destroying!')
+    this.destroyed = true
+    if (this.swarm) {
+      debug('disconnecting from swarm')
+      // debug('connections.size', this.swarm.connections.size)
+      // debug('swarm.flush()')
+      await this.swarm.flush()
+      // debug('flushed!')
+      // debug('connections.size', this.swarm.connections.size)
+      // // await this.swarm.clear()
+      // debug('swarm.destroy()')
+      await this.swarm.destroy()
+      // debug('swarm destroyed. disconnected?')
+      // debug('connections.size', this.swarm.connections.size)
+      for (const conn of this.swarm.connections) {
+        debug('disconnecting dangling connection')
+        conn.destroy()
+      }
     }
   }
 
-  async createDid () {
-    const didDocument = await this.create('DidDocument')
-    await didDocument.update()
-    debug('created did document', { didDocument })
-    return didDocument
+  async status () {
+    const status = {}
+    if (this.swarm) {
+      if (this.swarm.peers) {
+        status.numberOfPeers = this.swarm.peers.size
+        status.connected = this.swarm.peers.size > 0
+      }
+    }
+    return status
+  }
+
+  async get (publicKey, secretKey) {
+    publicKey = keyToBuffer(publicKey)
+    await this.ready()
+    debug('get', { publicKey })
+    const core = this.cores.get({ key: publicKey, secretKey })
+    await core.update()
+    return new Document(this, core, secretKey)
+  }
+
+  async create(){
+    const { publicKey, secretKey } = createSigningKeyPair()
+    return await this.get(publicKey, secretKey)
+  }
+
+}
+
+
+class Document {
+  constructor(node, core, secretKey){
+    this.node = node
+    this.core = core
+    this.secretKey = secretKey
+    this.id = keyToString(core.key)
+    this._subs = new Set();
+    this.core.on('close', () => this._close())
+    this.core.on('append', () => this._onAppend())
+  }
+  get key () { return this.core.key }
+  get keyPair () { return this.core.keyPair }
+  get writable () { return this.core.writable }
+  get length () { return this.core.length }
+  ready () { return this.core.ready() }
+  _close () {
+    console.log('??_close', this.key)
+  }
+  _onAppend () {
+    this._subs.forEach(handler => {
+      Promise.resolve()
+        .then(() => handler(this))
+        .catch(error => {
+          console.error(error)
+        })
+    })
+  }
+
+  get(index){ return this.core.get(index) }
+  append(blocks){ return this.core.append(blocks) }
+  sub(handler){
+    this._subs.add(handler)
+    return () => { this._subs.delete(handler) }
+  }
+
+
+  [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
+    let indent = ''
+    if (typeof opts.indentationLvl === 'number') { while (indent.length < opts.indentationLvl) indent += ' ' }
+    return this.constructor.name + '(\n' +
+      indent + '  id: ' + opts.stylize(this.id, 'string') + '\n' +
+      indent + '  writable: ' + opts.stylize(this.writable, 'boolean') + '\n' +
+      indent + '  length: ' + opts.stylize(this.length, 'number') + '\n' +
+      indent + ')'
   }
 }

@@ -5,7 +5,7 @@
   "description": "DIDs on Hypercore",
   "main": "index.js",
   "scripts": {
-    "TODO_test": "standard && tape test/*.js",
+    "lint": "standard",
     "test": "tape test/*.js"
   },
   "repository": {
