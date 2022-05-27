@@ -14,7 +14,7 @@ module.exports = class JlinxNode {
     if (!this.storagePath) throw new Error(`${this.constructor.name} requires 'storagePath'`)
     this.bootstrap = opts.bootstrap
     this.cores = opts.cores || new Corestore(Path.join(this.storagePath, 'cores'))
-    this.ready = this._ready
+    this._ready = this._open()
   }
 
   [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
@@ -23,16 +23,13 @@ module.exports = class JlinxNode {
     return this.constructor.name + '(\n' +
       indent + '  swarmKey: ' + opts.stylize(this.swarmKey, 'string') + '\n' +
       indent + '  storagePath: ' + opts.stylize(this.storagePath, 'string') + '\n' +
-      // indent + '  cores: ' + opts.stylize(this.corestore.cores.size, 'number') + '\n' +
-      // indent + '  writable: ' + opts.stylize(this.writable, 'boolean') + '\n' +
       indent + ')'
   }
 
-  async _ready () {
-    if (this.swarm) return
-    // await this.keys.ready()
-    await this.cores.ready()
+  ready () { return this._ready }
 
+  async _open () {
+    await this.cores.ready()
     // generates the same keypair every time based on cores.primaryKey
     const keyPair = await this.cores.createKeyPair('keypair')
     this.publicKey = keyPair.publicKey
@@ -67,7 +64,7 @@ module.exports = class JlinxNode {
   }
 
   async connected () {
-    if (!this._connected) await this.connect()
+    await this.ready()
     await this._connected
   }
 
