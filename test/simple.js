@@ -66,3 +66,27 @@ test('subscribing to changes', async (t, createNode) => {
 
   t.end()
 })
+
+test('getting a non-existant document', async (t, createNode) => {
+  const node1 = await createNode()
+  const node2 = await createNode()
+
+  t.equal(
+    await node1.get('StxBUrJtmwV1PG_zTgbd7wTNP849XyEYfJl_OOhESXp'),
+    undefined
+  )
+
+  const doc1 = await node1.create()
+  t.same(doc1.length, 0)
+
+  t.equal(
+    await node1.get(doc1.id),
+    undefined
+  )
+
+  await doc1.append([b4a.from('not empty')])
+  t.same(doc1.length, 1)
+
+  const doc1copy = await node2.get(doc1.id)
+  t.same(doc1copy.length, 1)
+})

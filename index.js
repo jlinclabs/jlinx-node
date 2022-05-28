@@ -117,6 +117,7 @@ module.exports = class JlinxNode {
     debug('get', { publicKey })
     const core = this.cores.get({ key: publicKey, secretKey })
     await core.update()
+    if (core.length === 0 && !secretKey) return
     return new Document(this, core, secretKey)
   }
 
