@@ -138,7 +138,7 @@ class Document {
   }
 
   get key () { return this.core.key }
-  get keyPair () { return this.core.keyPair }
+  get publicKey () { return keyToBuffer(this.core.key) }
   get writable () { return this.core.writable }
   get length () { return this.core.length }
   ready () { return this.core.ready() }

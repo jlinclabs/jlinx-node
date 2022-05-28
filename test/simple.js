@@ -1,5 +1,6 @@
 const b4a = require('b4a')
 const { test } = require('./helpers/index.js')
+const { validateSigningKeyPair } = require('jlinx-util')
 
 test('creating a document', async (t, createNode) => {
   const node1 = await createNode()
@@ -7,6 +8,15 @@ test('creating a document', async (t, createNode) => {
   const doc1 = await node1.create()
   t.same(doc1.writable, true)
   t.same(doc1.length, 0)
+  t.same(doc1.secretKey.length, 64)
+
+  t.ok(
+    validateSigningKeyPair({
+      publicKey: doc1.publicKey,
+      secretKey: doc1.secretKey
+    }),
+    'valid key pair'
+  )
 
   await doc1.append([
     b4a.from('one'),
