@@ -110,10 +110,10 @@ module.exports = class JlinxNode {
     return status
   }
 
-  async get (publicKey, secretKey) {
-    publicKey = keyToBuffer(publicKey)
+  async get (id, secretKey) {
+    debug('get', { id, secretKey: !!secretKey })
+    const publicKey = keyToBuffer(id)
     await this.ready()
-    debug('get', { publicKey })
     const core = this.cores.get({ key: publicKey, secretKey })
     await core.update()
     if (core.length === 0 && !secretKey) return
