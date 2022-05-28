@@ -2,6 +2,7 @@ const tape = require('tape')
 const tmp = require('tmp-promise')
 const fs = require('node:fs/promises')
 const HyperDHT = require('@hyperswarm/dht')
+const { createSigningKeyPair } = require('jlinx-util')
 
 const JlinxNode = require('../..')
 
@@ -38,8 +39,10 @@ exports.test = async function (name, fn, _tape = tape) {
     const jlinxNodes = []
     const create = async () => {
       const jlinx = new JlinxNode({
+        topic: Buffer.from('_testing_jlinx_node_on_hypercore'),
         storagePath: await newTmpDir(),
-        bootstrap
+        bootstrap,
+        keyPair: createSigningKeyPair()
       })
       jlinxNodes.push(jlinx)
       // const keyPair = await jlinx.keys.createSigning()

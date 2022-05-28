@@ -1,16 +1,31 @@
 const Debug = require('debug')
 const Corestore = require('corestore')
 const Hyperswarm = require('hyperswarm')
-const { keyToString, keyToBuffer, createSigningKeyPair } = require('jlinx-util')
+const {
+  keyToString,
+  keyToBuffer,
+  createSigningKeyPair,
+  validateSigningKeyPair
+} = require('jlinx-util')
 
 const debug = Debug('jlinx:node')
 
+const DEFAULT_TOPIC = process.env.NODE_ENV === 'production'
+  ? Buffer.from('thedefault_jlinx_hypercore_topic')
+  : Buffer.from('thetesting_jlinx_hypercore_topic')
+
 module.exports = class JlinxNode {
   constructor (opts) {
-    this.topic = opts.topic || Buffer.from('thisisthetopicfordidsonhypercore')
+    this.topic = opts.topic || DEFAULT_TOPIC
     this.storagePath = opts.storagePath
-    this.bootstrap = opts.bootstrap
     this.cores = new Corestore(this.storagePath)
+    if (!opts.keyPair || !validateSigningKeyPair(opts.keyPair)) {
+      throw new Error('invaid keyPair')
+    }
+    this.swarm = new Hyperswarm({
+      keyPair: opts.keyPair,
+      bootstrap: opts.bootstrap
+    })
     this._ready = this._open()
   }
 
@@ -27,15 +42,6 @@ module.exports = class JlinxNode {
 
   async _open () {
     await this.cores.ready()
-    // generates the same keypair every time based on cores.primaryKey
-    const keyPair = await this.cores.createKeyPair('keypair')
-    this.publicKey = keyToString(keyPair.publicKey)
-
-    this.swarm = new Hyperswarm({
-      keyPair,
-      bootstrap: this.bootstrap
-    })
-
     debug('connecting to swarm as', this.publicKey)
 
     process.on('SIGTERM', () => { this.destroy() })
@@ -46,7 +52,6 @@ module.exports = class JlinxNode {
         keyToString(conn.remotePublicKey)
       )
       // Is this what we want?
-      // TODO ensure not replicating internal stores like keys db
       this.cores.replicate(conn, {
         keepAlive: true
         // live?
