@@ -1,8 +1,7 @@
 # jlinx-node
 
 - connects to the hyperswarm and jlinx topic
-- stores hypercore key pairs
-- stores an associated signing owner signing public key required for appending
+- doesnt store any keys
 
 
 ## Interface

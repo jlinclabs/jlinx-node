@@ -1,5 +1,4 @@
 const Debug = require('debug')
-const Path = require('path')
 const Corestore = require('corestore')
 const Hyperswarm = require('hyperswarm')
 const { keyToString, keyToBuffer, createSigningKeyPair } = require('jlinx-util')
@@ -10,9 +9,8 @@ module.exports = class JlinxNode {
   constructor (opts) {
     this.topic = opts.topic || Buffer.from('thisisthetopicfordidsonhypercore')
     this.storagePath = opts.storagePath
-    if (!this.storagePath) throw new Error(`${this.constructor.name} requires 'storagePath'`)
     this.bootstrap = opts.bootstrap
-    this.cores = opts.cores || new Corestore(Path.join(this.storagePath, 'cores'))
+    this.cores = new Corestore(this.storagePath)
     this._ready = this._open()
   }
 
