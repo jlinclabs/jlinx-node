@@ -9,7 +9,6 @@ const debug = Debug('jlinx:node')
 module.exports = class JlinxNode {
   constructor (opts) {
     this.topic = opts.topic || Buffer.from('thisisthetopicfordidsonhypercore')
-    this.publicKey = opts.publicKey
     this.storagePath = opts.storagePath
     if (!this.storagePath) throw new Error(`${this.constructor.name} requires 'storagePath'`)
     this.bootstrap = opts.bootstrap
@@ -32,7 +31,7 @@ module.exports = class JlinxNode {
     await this.cores.ready()
     // generates the same keypair every time based on cores.primaryKey
     const keyPair = await this.cores.createKeyPair('keypair')
-    this.publicKey = keyPair.publicKey
+    this.publicKey = keyToString(keyPair.publicKey)
 
     this.swarm = new Hyperswarm({
       keyPair,
