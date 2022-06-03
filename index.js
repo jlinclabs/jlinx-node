@@ -4,7 +4,6 @@ const Hyperswarm = require('hyperswarm')
 const {
   keyToString,
   keyToBuffer,
-  createSigningKeyPair,
   validateSigningKeyPair
 } = require('jlinx-util')
 
@@ -19,6 +18,7 @@ module.exports = class JlinxNode {
     this.topic = opts.topic || DEFAULT_TOPIC
     this.storagePath = opts.storagePath
     this.cores = new Corestore(this.storagePath)
+    this.id = keyToString(opts.keyPair.publicKey)
     if (!opts.keyPair || !validateSigningKeyPair(opts.keyPair)) {
       throw new Error('invaid keyPair')
     }
@@ -33,7 +33,7 @@ module.exports = class JlinxNode {
     let indent = ''
     if (typeof opts.indentationLvl === 'number') { while (indent.length < opts.indentationLvl) indent += ' ' }
     return this.constructor.name + '(\n' +
-      indent + '  swarmKey: ' + opts.stylize(this.swarmKey, 'string') + '\n' +
+      indent + '  id: ' + opts.stylize(this.id, 'string') + '\n' +
       indent + '  storagePath: ' + opts.stylize(this.storagePath, 'string') + '\n' +
       indent + ')'
   }
@@ -42,7 +42,7 @@ module.exports = class JlinxNode {
 
   async _open () {
     await this.cores.ready()
-    debug('connecting to swarm as', this.publicKey)
+    debug('connecting to swarm as', this.id)
 
     process.on('SIGTERM', () => { this.destroy() })
 
@@ -113,66 +113,28 @@ module.exports = class JlinxNode {
     return status
   }
 
-  async get (id, secretKey) {
-    debug('get', { id, secretKey: !!secretKey })
-    const publicKey = keyToBuffer(id)
-    await this.ready()
-    const core = this.cores.get({ key: publicKey, secretKey })
+  // async create (publicKey, secretKey) {
+  //   const { publicKey, secretKey } = createSigningKeyPair()
+  //   // return await this.get(publicKey, secretKey)
+  // }
+
+  async getLength (id) {
+    const core = this.cores.get({ key: keyToBuffer(id) })
     await core.update()
-    if (core.length === 0 && !secretKey) return
-    return new Document(this, core, secretKey)
+    return core.length
   }
 
-  async create () {
-    const { publicKey, secretKey } = createSigningKeyPair()
-    return await this.get(publicKey, secretKey)
-  }
-}
-
-class Document {
-  constructor (node, core, secretKey) {
-    this.node = node
-    this.core = core
-    this.secretKey = secretKey
-    this.id = keyToString(core.key)
-    this._subs = new Set()
-    this.core.on('close', () => this._close())
-    this.core.on('append', () => this._onAppend())
+  async getEntry (id, index) {
+    const core = this.cores.get({ key: keyToBuffer(id) })
+    await core.update()
+    return await core.get(index)
   }
 
-  get key () { return this.core.key }
-  get publicKey () { return keyToBuffer(this.core.key) }
-  get writable () { return this.core.writable }
-  get length () { return this.core.length }
-  ready () { return this.core.ready() }
-  _close () {
-    console.log('??_close', this.key)
+  async append (id, secretKey, blocks) {
+    const core = this.cores.get({ key: keyToBuffer(id), secretKey })
+    await core.update() // skip?
+    await core.append(blocks)
+    return core.length
   }
 
-  _onAppend () {
-    this._subs.forEach(handler => {
-      Promise.resolve()
-        .then(() => handler(this))
-        .catch(error => {
-          console.error(error)
-        })
-    })
-  }
-
-  get (index) { return this.core.get(index) }
-  append (blocks) { return this.core.append(blocks) }
-  sub (handler) {
-    this._subs.add(handler)
-    return () => { this._subs.delete(handler) }
-  }
-
-  [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
-    let indent = ''
-    if (typeof opts.indentationLvl === 'number') { while (indent.length < opts.indentationLvl) indent += ' ' }
-    return this.constructor.name + '(\n' +
-      indent + '  id: ' + opts.stylize(this.id, 'string') + '\n' +
-      indent + '  writable: ' + opts.stylize(this.writable, 'boolean') + '\n' +
-      indent + '  length: ' + opts.stylize(this.length, 'number') + '\n' +
-      indent + ')'
-  }
 }

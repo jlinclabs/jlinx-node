@@ -1,10 +1,29 @@
 # jlinx-node
 
+AKA jlinx-hypercore-node
+
+this api could be implemented on IPFS
+
 - connects to the hyperswarm and jlinx topic
 - doesnt store any keys
 
 
 ## Interface
+
+
+### create
+
+
+### getLength
+
+
+### append
+
+
+### sub
+
+subscribe to changes
+
 
 
 ```js
@@ -13,16 +32,27 @@ const node = new JlinxNode({
   storagePath: '...',
 })
 
-const ledger = await node.create()
-ledger.length
-
-await ledger.append(key, 
+const id = await node.create()
+await node.getLength(id) // -> 0
+const length = await node.append(id, [
   b4a.from(
     JSON.stringify({
-      whatever: 'you want',
+      maybe: 'this is a header?'
+    })
+  ),
+  b4a.from(
+    JSON.stringify({
+      butWhatever: 'buffers you want'
     })
   )
-)
+])
+await node.getLength(id) // -> 0
+JSON.parse(await node.getEntry(id, 0)) // { maybe: 'this is a header?' }
+JSON.parse(await node.getEntry(id, 0)) // { butWhatever: 'buffers you want' }
+await node.sub(id, (newLength, id) => {
+
+}) // -> unsubFunction
+
 
 const header = JSON.parse(await ledger.get(0))
 

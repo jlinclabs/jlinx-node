@@ -50,12 +50,18 @@ exports.test = async function (name, fn, _tape = tape) {
       await jlinx.ready()
       return jlinx
     }
-    await fn(t, create)
+    let error
+    try{
+      await fn(t, create)
+    }catch(e){
+      error = e
+    }
 
     destroy(jlinxNodes)
     destroy(tmpDirs)
     destroy(bootstrappers)
     destroy(nodes)
+    t.end(error)
   }
 }
 exports.test.only = (name, fn) => exports.test(name, fn, tape.only)
