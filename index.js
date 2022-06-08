@@ -137,4 +137,25 @@ module.exports = class JlinxNode {
     return core.length
   }
 
+  async waitForUpdate(id, length){
+    debug('waitForUpdate', { id })
+    const core = this.cores.get({ key: keyToBuffer(id) })
+    await core.update()
+    if (length > core.length){
+      throw Error(`length given cannot be greater then the current length`)
+    }
+    if (length < core.length){
+      return core.length
+    }
+    if (length >= core.length){
+      return new Promise((resolve, reject) => {
+        core.on('append', () => {
+          // await core.update()  // ??
+          resolve(core.length)
+        })
+        // setTimeout(reject, 2000)
+      })
+    }
+  }
+
 }
