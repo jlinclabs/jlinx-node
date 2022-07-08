@@ -73,14 +73,13 @@ module.exports = class JlinxNode {
     await this._connected
   }
 
-  get peers() {
+  get peers () {
     return this.swarm ? this.swarm.peers : new Map()
   }
 
-  get numberOfPeers() {
+  get numberOfPeers () {
     return this.peers.size
   }
-
 
   async hasPeers () {
     debug('has peers (called)')
