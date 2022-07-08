@@ -96,16 +96,8 @@ module.exports = class JlinxNode {
     this.destroyed = true
     if (this.swarm) {
       debug('disconnecting from swarm')
-      // debug('connections.size', this.swarm.connections.size)
-      // debug('swarm.flush()')
       await this.swarm.flush()
-      // debug('flushed!')
-      // debug('connections.size', this.swarm.connections.size)
-      // // await this.swarm.clear()
-      // debug('swarm.destroy()')
       await this.swarm.destroy()
-      // debug('swarm destroyed. disconnected?')
-      // debug('connections.size', this.swarm.connections.size)
       for (const conn of this.swarm.connections) {
         debug('disconnecting dangling connection')
         conn.destroy()
@@ -124,51 +116,7 @@ module.exports = class JlinxNode {
     return status
   }
 
-  // async create (publicKey, secretKey) {
-  //   const { publicKey, secretKey } = createSigningKeyPair()
-  //   // return await this.get(publicKey, secretKey)
-  // }
   async get (id, secretKey) {
     return this.cores.get({ key: keyToBuffer(id), secretKey })
   }
-
-  // async getLength (id) {
-  //   const core = this.cores.get({ key: keyToBuffer(id) })
-  //   await core.update()
-  //   return core.length
-  // }
-
-  // async getEntry (id, index) {
-  //   const core = this.cores.get({ key: keyToBuffer(id) })
-  //   await core.update()
-  //   return await core.get(index)
-  // }
-
-  // async append (id, secretKey, blocks) {
-  //   const core = this.cores.get({ key: keyToBuffer(id), secretKey })
-  //   await core.update() // skip?
-  //   await core.append(blocks)
-  //   return core.length
-  // }
-
-  // async waitForUpdate(id, length){
-  //   debug('waitForUpdate', { id })
-  //   const core = this.cores.get({ key: keyToBuffer(id) })
-  //   await core.update()
-  //   if (length > core.length){
-  //     throw Error(`length given cannot be greater then the current length`)
-  //   }
-  //   if (length < core.length){
-  //     return core.length
-  //   }
-  //   if (length >= core.length){
-  //     return new Promise((resolve, reject) => {
-  //       core.on('append', () => {
-  //         // await core.update()  // ??
-  //         resolve(core.length)
-  //       })
-  //       // setTimeout(reject, 2000)
-  //     })
-  //   }
-  // }
 }
