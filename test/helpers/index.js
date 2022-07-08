@@ -51,9 +51,9 @@ exports.test = async function (name, fn, _tape = tape) {
       return jlinx
     }
     let error
-    try{
+    try {
       await fn(t, create)
-    }catch(e){
+    } catch (e) {
       error = e
     }
 

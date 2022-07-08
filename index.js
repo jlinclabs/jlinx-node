@@ -117,7 +117,7 @@ module.exports = class JlinxNode {
   //   const { publicKey, secretKey } = createSigningKeyPair()
   //   // return await this.get(publicKey, secretKey)
   // }
-  async get(id, secretKey){
+  async get (id, secretKey) {
     return this.cores.get({ key: keyToBuffer(id), secretKey })
   }
 
@@ -160,5 +160,4 @@ module.exports = class JlinxNode {
   //     })
   //   }
   // }
-
 }
