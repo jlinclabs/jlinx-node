@@ -67,7 +67,12 @@ module.exports = class JlinxNode {
     this.discovery = this.swarm.join(this.topic)
 
     debug('flushing discovery…')
-    this._connected = this.discovery.flushed()
+    this._connected = this.discovery.flushed().then(async () => {
+      if (this.swarm.peers.size > 0) return
+      await this.discovery.refresh()
+      if (this.swarm.peers.size > 0) return
+      throw new Error(`timeout waiting for peers id=${this.id}`)
+    })
   }
 
   async connected () {
@@ -83,14 +88,14 @@ module.exports = class JlinxNode {
     return this.peers.size
   }
 
-  async hasPeers () {
-    debug('has peers (called)')
-    await this.connected()
-    debug('has peers?', this.swarm.connections.size)
-    if (this.swarm.connections.size > 0) return
-    debug('waiting for more peers!')
-    await this.swarm.flush()
-  }
+  // async hasPeers () {
+  //   debug('has peers (called)')
+  //   await this.connected()
+  //   debug('has peers?', this.swarm.connections.size)
+  //   if (this.swarm.connections.size > 0) return
+  //   debug('waiting for more peers!')
+  //   await this.swarm.flush()
+  // }
 
   async destroy () {
     if (this.destroyed) return

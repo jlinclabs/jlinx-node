@@ -10,8 +10,8 @@ test('peer connect', async (t, createNode) => {
   const node2 = await createNode()
 
   await Promise.all([
+    node1.connected(),
     node2.connected(),
-    node1.connected()
   ])
 
   const skp1 = createSigningKeyPair()
