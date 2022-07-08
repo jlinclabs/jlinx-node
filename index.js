@@ -33,11 +33,11 @@ module.exports = class JlinxNode {
   [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
     let indent = ''
     if (typeof opts.indentationLvl === 'number') { while (indent.length < opts.indentationLvl) indent += ' ' }
-    const numberOfPeers = (this.swarm && this.swarm.peers && this.swarm.peers.size) || 0
+
     return this.constructor.name + '(\n' +
       indent + '  id: ' + opts.stylize(this.id, 'string') + '\n' +
       indent + '  storagePath: ' + opts.stylize(this.storagePath, 'string') + '\n' +
-      indent + '  peers: ' + opts.stylize(numberOfPeers, 'number') + '\n' +
+      indent + '  peers: ' + opts.stylize(this.numberOfPeers, 'number') + '\n' +
       indent + ')'
   }
 
@@ -72,6 +72,15 @@ module.exports = class JlinxNode {
     await this.ready()
     await this._connected
   }
+
+  get peers() {
+    return this.swarm ? this.swarm.peers : new Map()
+  }
+
+  get numberOfPeers() {
+    return this.peers.size
+  }
+
 
   async hasPeers () {
     debug('has peers (called)')
