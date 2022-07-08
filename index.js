@@ -25,7 +25,8 @@ module.exports = class JlinxNode {
     debug('bootstrap', opts.bootstrap)
     this.swarm = new Hyperswarm({
       keyPair: opts.keyPair,
-      bootstrap: opts.bootstrap
+      bootstrap: opts.bootstrap,
+      debug: true,
     })
     this._ready = this._open()
   }
@@ -37,6 +38,7 @@ module.exports = class JlinxNode {
     return this.constructor.name + '(\n' +
       indent + '  id: ' + opts.stylize(this.id, 'string') + '\n' +
       indent + '  storagePath: ' + opts.stylize(this.storagePath, 'string') + '\n' +
+      indent + '  topic: ' + opts.stylize(this.topic, 'string') + '\n' +
       indent + '  peers: ' + opts.stylize(this.numberOfPeers, 'number') + '\n' +
       indent + ')'
   }
