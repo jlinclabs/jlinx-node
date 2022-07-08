@@ -22,6 +22,7 @@ module.exports = class JlinxNode {
     if (!opts.keyPair || !validateSigningKeyPair(opts.keyPair)) {
       throw new Error('invaid keyPair')
     }
+    debug('bootstrap', opts.bootstrap)
     this.swarm = new Hyperswarm({
       keyPair: opts.keyPair,
       bootstrap: opts.bootstrap
@@ -32,9 +33,11 @@ module.exports = class JlinxNode {
   [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
     let indent = ''
     if (typeof opts.indentationLvl === 'number') { while (indent.length < opts.indentationLvl) indent += ' ' }
+    const numberOfPeers = (this.swarm && this.swarm.peers && this.swarm.peers.size) || 0
     return this.constructor.name + '(\n' +
       indent + '  id: ' + opts.stylize(this.id, 'string') + '\n' +
       indent + '  storagePath: ' + opts.stylize(this.storagePath, 'string') + '\n' +
+      indent + '  peers: ' + opts.stylize(numberOfPeers, 'number') + '\n' +
       indent + ')'
   }
 

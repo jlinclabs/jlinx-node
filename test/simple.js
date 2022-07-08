@@ -1,6 +1,46 @@
 const b4a = require('b4a')
 const { test } = require('./helpers/index.js')
-const { validateSigningKeyPair } = require('jlinx-util')
+const {
+  createSigningKeyPair,
+  validateSigningKeyPair
+} = require('jlinx-util')
+
+test('peer connect', async (t, createNode) => {
+  const node1 = await createNode()
+  const node2 = await createNode()
+
+  await Promise.all([
+    node2.connected(),
+    node1.connected()
+  ])
+
+  const skp1 = createSigningKeyPair()
+  const core1 = await node1.get(skp1.publicKey, skp1.secretKey)
+  await core1.ready()
+
+  t.equal(core1.length, 0)
+  t.ok(core1.writable)
+  await core1.append([
+    b4a.from('block one'),
+    b4a.from('block two')
+  ])
+  t.equal(core1.length, 2)
+
+  const core1copy = await node2.get(skp1.publicKey)
+  await core1copy.ready()
+  await core1copy.update()
+
+  t.equal(core1copy.length, 2)
+
+  t.equal(
+    (await core1.get(0)).toString(),
+    (await core1copy.get(0)).toString()
+  )
+  t.equal(
+    (await core1.get(1)).toString(),
+    (await core1copy.get(1)).toString()
+  )
+})
 
 test('creating a document', async (t, createNode) => {
   const node1 = await createNode()
