@@ -25,6 +25,7 @@
     "autobase": "^1.0.0-alpha.8",
     "corestore": "^6.0.1-alpha.17",
     "debug": "^4.3.4",
+    "exit-hook": "^3.0.0",
     "hyperbee": "^1.8.3",
     "hyperswarm": "github:hyperswarm/hyperswarm#v3.0.4",
     "jlinx-util": "github:jlinclabs/jlinx-util#b9cd3cd0a71352ec4605652d7944111124a589e6",

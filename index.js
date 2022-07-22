@@ -6,6 +6,7 @@ const {
   keyToBuffer,
   validateSigningKeyPair
 } = require('jlinx-util')
+const exitHookImport = import('exit-hook')
 
 const debug = Debug('jlinx:node')
 
@@ -49,7 +50,8 @@ module.exports = class JlinxNode {
     await this.cores.ready()
     debug('connecting to swarm as', this.id)
 
-    process.on('SIGTERM', () => { this.destroy() })
+    const { default: exitHook } = await exitHookImport
+    this._undoExitHook = exitHook(() => { this.destroy() })
 
     this.swarm.on('connection', (conn) => {
       debug(
@@ -92,6 +94,7 @@ module.exports = class JlinxNode {
     if (this.destroyed) return
     debug('destroying!')
     this.destroyed = true
+    if (this._undoExitHook) this._undoExitHook()
     if (this.swarm) {
       debug('disconnecting from swarm')
       await this.swarm.flush()
