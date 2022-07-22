@@ -70,10 +70,15 @@ module.exports = class JlinxNode {
 
     debug('flushing discovery…')
     this._connected = this.discovery.flushed().then(async () => {
-      if (this.swarm.peers.size > 0) return
-      await this.discovery.refresh()
-      if (this.swarm.peers.size > 0) return
-      throw new Error(`timeout waiting for peers id=${this.id}`)
+      let refreshCount = 0
+      while (this.swarm.peers.size === 0) {
+        refreshCount++
+        await this.discovery.refresh()
+        if (this.swarm.peers.size > 0) return
+        if (refreshCount > 10) {
+          throw new Error(`timeout waiting for peers id=${this.id}`)
+        }
+      }
     })
   }
 
