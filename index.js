@@ -26,7 +26,7 @@ module.exports = class JlinxNode {
     this.swarm = new Hyperswarm({
       keyPair: opts.keyPair,
       bootstrap: opts.bootstrap,
-      debug: true,
+      debug: true
     })
     this._ready = this._open()
   }
@@ -87,15 +87,6 @@ module.exports = class JlinxNode {
   get numberOfPeers () {
     return this.peers.size
   }
-
-  // async hasPeers () {
-  //   debug('has peers (called)')
-  //   await this.connected()
-  //   debug('has peers?', this.swarm.connections.size)
-  //   if (this.swarm.connections.size > 0) return
-  //   debug('waiting for more peers!')
-  //   await this.swarm.flush()
-  // }
 
   async destroy () {
     if (this.destroyed) return
