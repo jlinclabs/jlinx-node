@@ -23,7 +23,7 @@ module.exports = class JlinxNode {
     if (!opts.keyPair || !validateSigningKeyPair(opts.keyPair)) {
       throw new Error('invaid keyPair')
     }
-    debug('bootstrap', opts.bootstrap)
+    debug(`[${this.id}]`, 'bootstrap', opts.bootstrap)
     this.swarm = new Hyperswarm({
       keyPair: opts.keyPair,
       bootstrap: opts.bootstrap,
@@ -48,13 +48,14 @@ module.exports = class JlinxNode {
 
   async _open () {
     await this.cores.ready()
-    debug('connecting to swarm as', this.id)
+    debug(`[${this.id}]`, 'connecting to swarm as', this.id)
 
     const { default: exitHook } = await exitHookImport
     this._undoExitHook = exitHook(() => { this.destroy() })
 
     this.swarm.on('connection', (conn) => {
       debug(
+        `[${this.id}]`,
         'new peer connection from',
         keyToString(conn.remotePublicKey)
       )
@@ -65,14 +66,17 @@ module.exports = class JlinxNode {
       })
     })
 
-    debug(`joining topic: "${this.topic}"`)
+    debug(`[${this.id}]`, `joining topic: "${this.topic}"`)
     this.discovery = this.swarm.join(this.topic)
 
-    debug('flushing discovery…')
+    debug(`[${this.id}]`, 'flushing discovery…')
     this._connected = this.discovery.flushed().then(async () => {
+      debug(`[${this.id}]`, 'discovery flushed')
       let refreshCount = 0
+      debug(`[${this.id}]`, 'this.swarm.peers.size=', this.swarm.peers.size)
       while (this.swarm.peers.size === 0) {
         refreshCount++
+        debug(`[${this.id}]`, 'refreshing discovery', this.swarm.peers.size)
         await this.discovery.refresh()
         if (this.swarm.peers.size > 0) return
         if (refreshCount > 10) {
@@ -97,15 +101,15 @@ module.exports = class JlinxNode {
 
   async destroy () {
     if (this.destroyed) return
-    debug('destroying!')
+    debug(`[${this.id}]`, 'destroying!')
     this.destroyed = true
     if (this._undoExitHook) this._undoExitHook()
     if (this.swarm) {
-      debug('disconnecting from swarm')
+      debug(`[${this.id}]`, 'disconnecting from swarm')
       await this.swarm.flush()
       await this.swarm.destroy()
       for (const conn of this.swarm.connections) {
-        debug('disconnecting dangling connection')
+        debug(`[${this.id}]`, 'disconnecting dangling connection')
         conn.destroy()
       }
     }
