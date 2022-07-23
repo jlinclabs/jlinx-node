@@ -28,7 +28,7 @@
     "exit-hook": "^3.0.0",
     "hyperbee": "^1.8.3",
     "hyperswarm": "github:hyperswarm/hyperswarm#v3.0.4",
-    "jlinx-util": "github:jlinclabs/jlinx-util#b9cd3cd0a71352ec4605652d7944111124a589e6",
+    "jlinx-util": "github:jlinclabs/jlinx-util#907a7345b527a017bd62b3f5c8ad51433225c9d6",
     "node-fetch": "^3.2.4",
     "urlsafe-base64": "^1.0.0"
   },
