@@ -1,11 +1,12 @@
 {
   "name": "jlinx-node",
   "version": "1.0.0",
-  "description": "DIDs on Hypercore",
+  "description": "microledgers for decentralized apps",
   "main": "index.js",
   "scripts": {
     "lint": "standard",
-    "test": "standard && tape test/*.js"
+    "tape": "tape $(find test | grep \\.test\\.js$)",
+    "test": "npm run lint && npm run tape"
   },
   "repository": {
     "type": "git",
