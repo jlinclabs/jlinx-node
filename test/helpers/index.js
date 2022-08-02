@@ -48,8 +48,7 @@ exports.test = async function (name, fn, _tape = tape) {
         keyPair: createSigningKeyPair()
       })
       jlinxNodes.push(jlinx)
-      // const keyPair = await jlinx.keys.createSigning()
-      // jlinx.publicKey = keyToString(keyPair.publicKey)
+      debug('created node', jlinx)
       await jlinx.ready()
       return jlinx
     }
