@@ -1,3 +1,4 @@
+const Debug = require('debug')
 const tape = require('tape')
 const tmp = require('tmp-promise')
 const fs = require('node:fs/promises')
@@ -5,6 +6,8 @@ const HyperDHT = require('@hyperswarm/dht')
 const { createSigningKeyPair } = require('jlinx-util')
 
 const JlinxNode = require('../..')
+
+const debug = Debug('jlinx:node:test')
 
 exports.test = async function (name, fn, _tape = tape) {
   return _tape(name, run)
@@ -37,7 +40,7 @@ exports.test = async function (name, fn, _tape = tape) {
     }
 
     const jlinxNodes = []
-    const create = async () => {
+    const createNode = async () => {
       const jlinx = new JlinxNode({
         topic: Buffer.from('_testing_jlinx_node_on_hypercore'),
         storagePath: await newTmpDir(),
@@ -52,7 +55,7 @@ exports.test = async function (name, fn, _tape = tape) {
     }
     let error
     try {
-      await fn(t, create)
+      await fn(t, createNode)
     } catch (e) {
       error = e
     }
