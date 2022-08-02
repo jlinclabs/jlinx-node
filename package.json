@@ -23,13 +23,13 @@
   "homepage": "https://github.com/jlinclabs/jlinx-node#readme",
   "dependencies": {
     "autobase": "^1.0.0-alpha.8",
-    "corestore": "^6.0.1-alpha.17",
+    "corestore": "^6.0.1-alpha.19",
     "debug": "^4.3.4",
     "exit-hook": "^3.0.0",
-    "hyperbee": "^1.8.3",
+    "hyperbee": "^1.10.1",
     "hyperswarm": "github:hyperswarm/hyperswarm#v3.0.4",
     "jlinx-util": "github:jlinclabs/jlinx-util#907a7345b527a017bd62b3f5c8ad51433225c9d6",
-    "node-fetch": "^3.2.4",
+    "node-fetch": "^3.2.10",
     "urlsafe-base64": "^1.0.0"
   },
   "devDependencies": {
