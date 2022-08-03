@@ -1,5 +1,6 @@
 const b4a = require('b4a')
 const Autobase = require('autobase')
+const { timeout } = require('nonsynchronous')
 const { test, coreValues } = require('./helpers/index.js')
 const {
   createSigningKeyPair,
@@ -12,7 +13,7 @@ test('autobase', async (t, createNode) => {
 
   async function createWriter(){
     const node = await createNode()
-    await node.connected()
+    // await node.connected()
     const { publicKey, secretKey } = createSigningKeyPair()
     const core = await node.get(
       keyToString(publicKey),
@@ -30,8 +31,20 @@ test('autobase', async (t, createNode) => {
     createWriter(),
   ])
 
-  async function apply(){
+  console.log({
+    writerA: writerA.key.toString('hex'),
+    writerB: writerB.key.toString('hex'),
+    writerC: writerC.key.toString('hex'),
+  })
 
+  await Promise.all([
+    writerA.jlinxNode.connected(),
+    writerB.jlinxNode.connected(),
+    writerC.jlinxNode.connected(),
+  ])
+
+  async function apply(){
+    throw new Error('APPLY NOT READY')
   }
 
   async function createBaseFor(writer){
@@ -71,28 +84,36 @@ test('autobase', async (t, createNode) => {
   t.same(await getValues(baseB), [])
   t.same(await getValues(baseC), [])
 
-  // console.log({
-  //   baseA,
-  //   baseB,
-  //   baseC,
-  // })
   await baseA.append(
     'a.1',
     await baseA.latest(),
     baseA.writer
   )
-  t.same(await coreValues(writerA), ['a.1'])
+  // MAGIC!?: not doing this breaks things
+  await coreValues(baseA.writer)
+  // t.same(await coreValues(baseA.writer), ['a.1'])
+
+  const baseBsBaseA = baseB.inputs.find(i => i.key === baseA.writer.key)
+  t.same(baseBsBaseA.key, baseA.writer.key)
+  await baseBsBaseA.update()
+  t.same(baseBsBaseA.length, baseA.writer.length)
+
+  // await timeout(250)
+
+  // MAGIC!?: not doing this breaks things
+  // t.same(await coreValues(writerA), ['a.1'])
 
   // await baseA.writer.flush()
   // await coreValues(baseA.writer) // MAGIC!
 
-  t.same(writerA.length, 1)
+  // t.same(writerA.length, 1)
   // t.same(await coreValues(writerA), ['a.1'])
-  t.same(writerB.length, 0)
-  t.same(writerC.length, 0)
+  // t.same(writerB.length, 0)
+  // t.same(writerC.length, 0)
 
-  await baseB.latest()
-  await baseC.latest()
+  console.log('baseB.latest()', await baseB.latest())
+  console.log('baseC.latest()', await baseC.latest())
+
 
   // await baseA.inputs[0].update()
   // await baseB.inputs[0].update()
@@ -131,6 +152,8 @@ test('autobase', async (t, createNode) => {
   //   await getValues(),
   //   []
   // )
+
+  console.log('AUTOBASE TEST DONE')
 })
 
 

@@ -79,8 +79,8 @@ function destroy (...nodes) {
 
 exports.coreValues = async function coreValues(core){
   const values = []
-  for (let n = 0; n <= core.length; n++){
-    values[n] = await core.get(n)
+  for (let n = 0; n < core.length; n++){
+    values[n] = (await core.get(n)).toString()
   }
   return values
 }
