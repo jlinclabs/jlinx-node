@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "nonsynchronous": "^1.2.0",
+    "random-access-memory": "^5.0.0",
     "standard": "^17.0.0",
     "tape": "^5.5.3",
     "tmp-promise": "^3.0.3"

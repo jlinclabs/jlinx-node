@@ -1,5 +1,8 @@
 const b4a = require('b4a')
 const Autobase = require('autobase')
+const Hypercore = require('hypercore')
+const ram = require('random-access-memory')
+
 const { timeout } = require('nonsynchronous')
 const { test, coreValues } = require('./helpers/index.js')
 const {
@@ -54,10 +57,11 @@ test('autobase', async (t, createNode) => {
       writer === writerB ? writerB : node.get(writerB.key),
       writer === writerC ? writerC : node.get(writerC.key)
     ])
-    await Promise.all(inputs.map(i => i.ready()))
+    // await Promise.all(inputs.map(i => i.ready()))
+    const localOutput = new Hypercore(ram)
     const base = new Autobase({
       inputs,
-      // localOutput,
+      localOutput,
       apply,
     })
     base.writer = writer
@@ -71,7 +75,7 @@ test('autobase', async (t, createNode) => {
   ])
 
   async function getValues(base){
-    // await base.view.update()
+    await base.view.update()
     const stream = base.createCausalStream()
     const buf = []
     for await (const node of stream) {
@@ -89,14 +93,28 @@ test('autobase', async (t, createNode) => {
     await baseA.latest(),
     baseA.writer
   )
-  // MAGIC!?: not doing this breaks things
-  await coreValues(baseA.writer)
-  // t.same(await coreValues(baseA.writer), ['a.1'])
+  console.log('baseA.writer', baseA.writer)
+  t.same(baseA.writer.length, 1)
+  t.equal(baseA.inputs[0], baseA.writer)
+  t.same(baseA.inputs[0].key, baseA.writer.key)
+  t.same(baseA.inputs[0].length, 1)
+  await baseB.inputs[0].update()
+  console.log( await baseB.inputs[0] )
+  t.same(baseB.inputs[0].length, 1)
+  t.same(baseC.inputs[0].length, 1)
 
-  const baseBsBaseA = baseB.inputs.find(i => i.key === baseA.writer.key)
-  t.same(baseBsBaseA.key, baseA.writer.key)
-  await baseBsBaseA.update()
-  t.same(baseBsBaseA.length, baseA.writer.length)
+
+  // await baseA.view.update()
+  // await baseB.view.update()
+  // await baseC.view.update()
+  // // MAGIC!?: not doing this breaks things
+  // await coreValues(baseA.writer)
+  // // t.same(await coreValues(baseA.writer), ['a.1'])
+
+  // const baseBsBaseA = baseB.inputs.find(i => i.key === baseA.writer.key)
+  // t.same(baseBsBaseA.key, baseA.writer.key)
+  // await baseBsBaseA.update()
+  // t.same(baseBsBaseA.length, baseA.writer.length)
 
   // await timeout(250)
 
