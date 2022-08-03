@@ -16,6 +16,8 @@ test('peer connect', async (t, createNode) => {
     node2.connected()
   ])
 
+  t.ok(node1.peers.has(node2.id))
+  t.ok(node2.peers.has(node1.id))
   t.same(node1.peers.size, 1)
   t.same(node2.peers.size, 1)
 
@@ -35,6 +37,7 @@ test('peer connect', async (t, createNode) => {
   await core1copy.ready()
   await core1copy.update()
 
+  console.log({core1, core1copy})
   t.equal(core1copy.length, 2)
 
   t.equal(

@@ -27,12 +27,15 @@
     "corestore": "^6.0.1-alpha.19",
     "debug": "^4.3.4",
     "exit-hook": "^3.0.0",
+    "hypercore": "^10.0.0-alpha.55",
+    "hypercore-crypto": "^3.2.1",
     "hyperswarm": "^4.2.0",
     "jlinx-util": "github:jlinclabs/jlinx-util#907a7345b527a017bd62b3f5c8ad51433225c9d6",
     "node-fetch": "^3.2.10",
     "urlsafe-base64": "^1.0.0"
   },
   "devDependencies": {
+    "@hyperswarm/testnet": "^3.0.0",
     "nonsynchronous": "^1.2.0",
     "random-access-memory": "^5.0.0",
     "standard": "^17.0.0",

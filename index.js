@@ -19,10 +19,10 @@ module.exports = class JlinxNode {
     this.topic = opts.topic || DEFAULT_TOPIC
     this.storagePath = opts.storagePath
     this.cores = new Corestore(this.storagePath)
-    this.id = keyToString(opts.keyPair.publicKey)
     if (!opts.keyPair || !validateSigningKeyPair(opts.keyPair)) {
       throw new Error('invaid keyPair')
     }
+    this.id = opts.keyPair.publicKey.toString('hex')
     debug(`[${this.id}]`, 'bootstrap', opts.bootstrap)
     this.swarm = new Hyperswarm({
       keyPair: opts.keyPair,
@@ -31,6 +31,8 @@ module.exports = class JlinxNode {
     })
     this._ready = this._open()
   }
+
+  // get swarmId () { return this.swarm.keyPair.publicKey.toString('hex') }
 
   [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
     let indent = ''
@@ -49,6 +51,7 @@ module.exports = class JlinxNode {
   async _open () {
     await this.cores.ready()
     debug(`[${this.id}]`, 'connecting to swarm as', this.id)
+    await this.swarm.listen()
 
     const { default: exitHook } = await exitHookImport
     this._undoExitHook = exitHook(() => { this.destroy() })
