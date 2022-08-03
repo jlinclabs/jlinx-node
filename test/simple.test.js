@@ -6,13 +6,18 @@ const {
 } = require('jlinx-util')
 
 test('peer connect', async (t, createNode) => {
-  const node1 = await createNode()
-  const node2 = await createNode()
+  const [node1, node2] = await Promise.all([
+    createNode(),
+    createNode()
+  ])
 
   await Promise.all([
     node1.connected(),
     node2.connected()
   ])
+
+  t.same(node1.peers.size, 1)
+  t.same(node2.peers.size, 1)
 
   const skp1 = createSigningKeyPair()
   const core1 = await node1.get(skp1.publicKey, skp1.secretKey)
@@ -41,6 +46,10 @@ test('peer connect', async (t, createNode) => {
     (await core1copy.get(1)).toString()
   )
 })
+
+
+
+
 
 // test('creating a document', async (t, createNode) => {
 //   const node1 = await createNode()
