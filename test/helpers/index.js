@@ -24,7 +24,7 @@ Object.assign(exports, {
 })
 
 async function createTestnet(t, size = 3){
-  const testnet = await _createTestnet(3, t.teardown)
+  const testnet = await _createTestnet(size, t.teardown)
 
   const newTmpDir = async () => {
     const { path } = await tmp.dir()
