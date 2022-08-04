@@ -5,7 +5,7 @@ const Hyperswarm = require('hyperswarm')
 const Corestore = require('corestore')
 const ram = require('random-access-memory')
 
-test('smoke', async (t) => {
+test('swarm connecting', async (t) => {
   const { bootstrap } = await createTestnet(3, t.teardown)
 
   const swarm1 = new Hyperswarm({ bootstrap })
@@ -64,18 +64,16 @@ test('corestore replication', async (t) => {
     return node
   }
 
+  // Why does this work…
   const node1 = await createNode('node1')
   const node2 = await createNode('node2')
-
-  // Why doesnt this work?
+  // …but this doesnt work?
   // const [node1, node2] = await Promise.all([
   //   createNode('node1'),
   //   createNode('node2'),
   // ])
 
   await connected
-
-  await node1.cores.findingPeers()
 
   const core1 = node1.cores.get({ name: 'alfalpha' })
   await core1.append('one')
@@ -88,11 +86,14 @@ test('corestore replication', async (t) => {
   t.is(core1copy.length, 1)
   t.alike((await core1copy.get(0)).toString(), 'one')
 
-  await core1.append(['two', 'three', 'four'])
-  await timeout(10) // why?
-
-  await core1copy.update()
-  t.is(core1copy.length, 4, 'core update failed')
+  // this used to work
+  {
+    await core1.append(['two', 'three', 'four'])
+    // await core1.replicate()
+    await timeout(10) // but now it needs a timeout
+    await core1copy.update()
+    t.is(core1copy.length, 4, 'core update failed')
+  }
 
   t.alike(await stringAll(core1copy), ['one', 'two', 'three', 'four'])
 
