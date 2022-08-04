@@ -2,7 +2,6 @@ const Debug = require('debug')
 const Corestore = require('corestore')
 const Hyperswarm = require('hyperswarm')
 const {
-  keyToString,
   keyToBuffer,
   validateSigningKeyPair
 } = require('jlinx-util')
@@ -60,16 +59,18 @@ module.exports = class JlinxNode {
       debug(
         `[${this.id}]`,
         'new peer connection from',
-        keyToString(conn.remotePublicKey)
+        conn.remotePublicKey.toString('hex')
       )
+      debug(`[${this.id}] replicating cores. replicationSteams.length=${this.cores._replicationStreams.length}`)
       // Is this what we want?
       this.cores.replicate(conn, {
+        live: true,
         keepAlive: true,
         ondiscoverykey (...x) {
-          console.log('!! ondiscoverykey', x)
+          console.log('corestore replication ondiscoverykey', x)
         }
-        // live?
       })
+      debug(`[${this.id}] replicated cores. replicationSteams.length=${this.cores._replicationStreams.length}`)
     })
 
     debug(`[${this.id}]`, `joining topic: "${this.topic}"`)
