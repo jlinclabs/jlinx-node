@@ -134,10 +134,31 @@ module.exports = class JlinxNode {
   }
 
   async get (id, secretKey, opts = {}) {
-    return this.cores.get({
+    const core = this.cores.get({
       ...opts,
       key: keyToBuffer(id),
       secretKey
     })
+
+    return new Document(core, this)
+  }
+}
+
+class Document {
+  constructor(core, node){
+    this.core = core
+    this.node = node
+  }
+  get length () { return this.core.length }
+  get writable () { return this.core.writable }
+  get(...args){ return this.core.get(...args) }
+  on(...args){ return this.core.on(...args) }
+  once(...args){ return this.core.once(...args) }
+  ready(...args){ return this.core.ready(...args) }
+  async update(opts){
+    const done = this.core.findingPeers()
+    await this.node.swarm.flush()
+    done()
+    return this.core.update(opts)
   }
 }
