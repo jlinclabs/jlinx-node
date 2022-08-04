@@ -145,17 +145,18 @@ module.exports = class JlinxNode {
 }
 
 class Document {
-  constructor(core, node){
+  constructor (core, node) {
     this.core = core
     this.node = node
   }
+
   get length () { return this.core.length }
   get writable () { return this.core.writable }
-  get(...args){ return this.core.get(...args) }
-  on(...args){ return this.core.on(...args) }
-  once(...args){ return this.core.once(...args) }
-  ready(...args){ return this.core.ready(...args) }
-  async update(opts){
+  get (...args) { return this.core.get(...args) }
+  on (...args) { return this.core.on(...args) }
+  once (...args) { return this.core.once(...args) }
+  ready (...args) { return this.core.ready(...args) }
+  async update (opts) {
     const done = this.core.findingPeers()
     await this.node.swarm.flush()
     done()
