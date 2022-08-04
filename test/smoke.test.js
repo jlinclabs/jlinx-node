@@ -64,43 +64,24 @@ test('corestore replication', async (t) => {
     return node
   }
 
-  // Why does this work…
   const node1 = await createNode('node1')
   const node2 = await createNode('node2')
-  // …but this doesnt work?
-  // const [node1, node2] = await Promise.all([
-  //   createNode('node1'),
-  //   createNode('node2'),
-  // ])
 
   await connected
 
   t.ok(node1.cores._replicationStreams.length > 0, 'node1.cores has replication streams')
 
   const core1 = node1.cores.get({ name: 'alfalpha' })
-  // await core1.ready()
-  // console.log('node1.cores._sessions', node1.cores._sessions)
-  // console.log('node1.cores._replicationStreams.length', node1.cores._replicationStreams.length)
-
-  // console.log('core1', core1)
-  // console.log('core1.replicator.peers.length', core1.replicator.peers.length)
-
-  // t.ok(core1.replicator.peers.length > 0, 'core1 has no peers')
-
   await core1.append('one')
   t.is(core1.length, 1)
 
   const core1copy = node2.cores.get(core1.key)
-  // await core1copy.ready()
-  // await core1copy.update()
   await betterUpdate(core1copy)
   t.alike(core1.key, core1copy.key)
   t.is(core1copy.length, 1)
   t.alike((await core1copy.get(0)).toString(), 'one')
 
   await core1.append(['two', 'three', 'four'])
-  // await timeout(10) // WE SHOULD NOT NEED THIS :(
-  // await core1copy.update()
   await betterUpdate(core1copy)
   t.is(core1copy.length, 4, 'core update failed')
 
@@ -134,15 +115,12 @@ async function stringAll (core) {
   return values
 }
 
-function betterUpdate(core){
+function betterUpdate (core, ms = 2000) {
   return new Promise((resolve, reject) => {
     core.once('append', (error) => {
-      if (error) reject(); else resolve()
+      if (error) reject(error); else resolve()
     })
     core.update()
-    timeout(2000).then(() => {
-      resolve()
-      // reject(new Error(`timeout waiting for append ${core.id}`))
-    })
+    timeout(ms).then(() => { resolve() })
   })
 }
