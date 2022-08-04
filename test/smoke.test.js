@@ -86,14 +86,10 @@ test('corestore replication', async (t) => {
   t.is(core1copy.length, 1)
   t.alike((await core1copy.get(0)).toString(), 'one')
 
-  // this used to work
-  {
-    await core1.append(['two', 'three', 'four'])
-    // await core1.replicate()
-    await timeout(10) // but now it needs a timeout
-    await core1copy.update()
-    t.is(core1copy.length, 4, 'core update failed')
-  }
+  await core1.append(['two', 'three', 'four'])
+  await timeout(10) // WE SHOULD NOT NEED THIS :(
+  await core1copy.update()
+  t.is(core1copy.length, 4, 'core update failed')
 
   t.alike(await stringAll(core1copy), ['one', 'two', 'three', 'four'])
 
