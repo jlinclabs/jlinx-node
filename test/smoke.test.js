@@ -75,14 +75,10 @@ test('corestore replication', async (t) => {
 
   await connected
 
-  // console.log('node1.cores', node1.cores)
-  // console.log('node1.cores._findingPeersCount', node1.cores._findingPeersCount)
-  // console.log('node1.cores._streamSessions', node1.cores._streamSessions)
-  // console.log('node1.cores._replicationStreams.length', node1.cores._replicationStreams.length)
   t.ok(node1.cores._replicationStreams.length > 0, 'node1.cores has replication streams')
 
   const core1 = node1.cores.get({ name: 'alfalpha' })
-  await core1.ready()
+  // await core1.ready()
   // console.log('node1.cores._sessions', node1.cores._sessions)
   // console.log('node1.cores._replicationStreams.length', node1.cores._replicationStreams.length)
 
@@ -95,59 +91,34 @@ test('corestore replication', async (t) => {
   t.is(core1.length, 1)
 
   const core1copy = node2.cores.get(core1.key)
-  await core1copy.ready()
-  await core1copy.update()
-  // console.log('core1.replicator.peers.length', core1.replicator.peers.length)
-  // console.log('core1copy.replicator.peers.length', core1copy.replicator.peers.length)
-  t.ok(core1copy.replicator.peers.length > 0, 'core1copy has no peers')
-
-  await core1.append('two')
-  t.is(core1.length, 2)
-
-
-
-  // const appendEvent = t.test('appendEvent')
-  // appendEvent.plan(2)
-  // core1copy.on('append', () => {
-  //   appendEvent.pass()
-  //   t.is(core1copy.length, core1.length)
-  // })
-
-  // console.log('core1.activeRequests', core1.activeRequests)
-  // console.log('core1copy.activeRequests', core1copy.activeRequests)
-  // console.log('core1.replicator.peers', core1.replicator.peers.map(p => p.remotePublicKey))
-  // console.log('core1copy.replicator.peers', core1copy.replicator.peers.map(p => p.remotePublicKey))
-
+  // await core1copy.ready()
   // await core1copy.update()
   await betterUpdate(core1copy)
-  t.is(core1copy.length, 2)
+  t.alike(core1.key, core1copy.key)
+  t.is(core1copy.length, 1)
+  t.alike((await core1copy.get(0)).toString(), 'one')
 
-
-  // await core1copy.update()
-  // t.alike(core1.key, core1copy.key)
-  // t.is(core1copy.length, 1)
-  // t.alike((await core1copy.get(0)).toString(), 'one')
-
-  // await core1.append(['two', 'three', 'four'])
+  await core1.append(['two', 'three', 'four'])
   // await timeout(10) // WE SHOULD NOT NEED THIS :(
   // await core1copy.update()
-  // t.is(core1copy.length, 4, 'core update failed')
+  await betterUpdate(core1copy)
+  t.is(core1copy.length, 4, 'core update failed')
 
-  // t.alike(await stringAll(core1copy), ['one', 'two', 'three', 'four'])
+  t.alike(await stringAll(core1copy), ['one', 'two', 'three', 'four'])
 
-  // const appendEvent = t.test('appendEvent')
-  // appendEvent.plan(2)
+  const appendEvent = t.test('appendEvent')
+  appendEvent.plan(2)
 
-  // core1copy.on('append', (...x) => {
-  //   appendEvent.pass()
-  //   t.is(core1copy.length, core1.length)
-  // })
+  core1copy.on('append', (...x) => {
+    appendEvent.pass()
+    t.is(core1copy.length, core1.length)
+  })
 
-  // await core1.append(['five'])
-  // await timeout(100) // space out the two report
-  // await core1.append(['six'])
+  await core1.append(['five'])
+  await timeout(100) // space out the two report
+  await core1.append(['six'])
 
-  // await appendEvent
+  await appendEvent
 
   await node1.destroy()
   await node2.destroy()
@@ -170,7 +141,8 @@ function betterUpdate(core){
     })
     core.update()
     timeout(2000).then(() => {
-      reject(new Error(`timeout waiting for append ${core.id}`))
+      resolve()
+      // reject(new Error(`timeout waiting for append ${core.id}`))
     })
   })
 }
