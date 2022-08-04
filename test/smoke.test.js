@@ -105,7 +105,7 @@ test('corestore replication', async (t) => {
   })
 
   await core1.append(['five'])
-  await timeout(100) // why?
+  await timeout(100) // space out the two report
   await core1.append(['six'])
 
   await appendEvent

@@ -25,12 +25,9 @@ test('peer connect', async (t) => {
   const core1copy = await node2.get(skp1.publicKey)
   await core1copy.ready()
   await core1copy.update()
-  console.log({core1, core1copy})
 
   await core1copy.get(0) // why is this needed?
   t.alike(core1copy.length, 2)
-
-
 
   t.alike(
     (await core1.get(0)).toString(),
@@ -42,6 +39,30 @@ test('peer connect', async (t) => {
   )
 
 
+  const appendEvent = t.test('appendEvent')
+  appendEvent.plan(2)
+
+  core1copy.on('append', (...x) => {
+    appendEvent.pass()
+    t.is(core1copy.length, core1.length)
+  })
+
+  await core1.append(['block three'])
+  await timeout(100) // space out the two report
+  await core1.append(['block four'])
+
+  await appendEvent
+
+  t.alike(
+    (await core1copy.get(2)).toString(),
+    'block three'
+  )
+  t.alike(
+    (await core1copy.get(3)).toString(),
+    'block four'
+  )
+
+  t.alike(core1copy.length, 4)
 
 })
 
