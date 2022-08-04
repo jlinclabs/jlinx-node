@@ -1,7 +1,10 @@
-const { test, createTestnet, timeout } = require('./helpers/index.js')
 const {
-  createSigningKeyPair
-} = require('jlinx-util')
+  test,
+  createTestnet,
+  timeout,
+  JlinxNode,
+  createSigningKeyPair,
+} = require('./helpers/index.js')
 
 test('peer connect', async (t) => {
   const { createJlinxNodes } = await createTestnet(t)
@@ -67,8 +70,16 @@ test('peer connect', async (t) => {
 })
 
 
+// test.solo('invalid keyPair', async (t) => {
+//   t.exception.all(() => { new JlinxNode({}) }, /this.storage is not a function/)
 
+//   t.exception.all(() => {
+//     new JlinxNode({
+//       storage: () => {},
+//     })
+//   }, /ass face/)
 
+// })
 
 // test('creating a document', async (t, createNode) => {
 //   const node1 = await createNode()

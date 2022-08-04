@@ -6,15 +6,21 @@ const Corestore = require('corestore')
 const ram = require('random-access-memory')
 const tmp = require('tmp-promise')
 const fs = require('node:fs/promises')
-const { createSigningKeyPair } = require('jlinx-util')
+const {
+  keyToString,
+  createSigningKeyPair
+} = require('jlinx-util')
 
 const JlinxNode = require('../..')
 
 Object.assign(exports, {
   test,
   timeout,
+  keyToString,
+  createSigningKeyPair,
   createTestnet,
   coreValues,
+  JlinxNode,
 })
 
 async function createTestnet(t, size = 3){
