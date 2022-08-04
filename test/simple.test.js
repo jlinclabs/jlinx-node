@@ -2,8 +2,7 @@ const {
   test,
   createTestnet,
   timeout,
-  JlinxNode,
-  createSigningKeyPair,
+  createSigningKeyPair
 } = require('./helpers/index.js')
 
 test('peer connect', async (t) => {
@@ -22,7 +21,6 @@ test('peer connect', async (t) => {
   ])
   t.alike(core1.length, 2)
 
-
   await timeout(10) // why?
 
   const core1copy = await node2.get(skp1.publicKey)
@@ -40,7 +38,6 @@ test('peer connect', async (t) => {
     (await core1.get(1)).toString(),
     (await core1copy.get(1)).toString()
   )
-
 
   const appendEvent = t.test('appendEvent')
   appendEvent.plan(2)
@@ -66,9 +63,7 @@ test('peer connect', async (t) => {
   )
 
   t.alike(core1copy.length, 4)
-
 })
-
 
 // test.solo('invalid keyPair', async (t) => {
 //   t.exception.all(() => { new JlinxNode({}) }, /this.storage is not a function/)

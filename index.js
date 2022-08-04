@@ -65,9 +65,9 @@ module.exports = class JlinxNode {
       // Is this what we want?
       this.cores.replicate(conn, {
         keepAlive: true,
-        ondiscoverykey(...x){
+        ondiscoverykey (...x) {
           console.log('!! ondiscoverykey', x)
-        },
+        }
         // live?
       })
     })

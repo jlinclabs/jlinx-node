@@ -43,7 +43,7 @@ test('corestore replication', async (t) => {
   const connected = t.test('connection')
   connected.plan(2)
 
-  async function createNode(name){
+  async function createNode (name) {
     const node = {}
     node.swarm = new Hyperswarm({ bootstrap })
     node.cores = new Corestore(ram)
@@ -51,7 +51,7 @@ test('corestore replication', async (t) => {
     node.swarm.on('connection', (conn) => {
       connected.pass(name)
       node.cores.replicate(conn, {
-        keepAlive: true,
+        keepAlive: true
       })
     })
     node.destroy = async () => {
@@ -116,9 +116,9 @@ test('corestore replication', async (t) => {
 
 function noop () {}
 
-async function stringAll(core){
+async function stringAll (core) {
   const values = []
-  for (let n = 0; n < core.length; n++){
+  for (let n = 0; n < core.length; n++) {
     values[n] = (await core.get(n)).toString()
   }
   return values

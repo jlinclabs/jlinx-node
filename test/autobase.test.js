@@ -101,7 +101,6 @@
 //   t.alike(baseB.inputs[0].length, 1)
 //   t.alike(baseC.inputs[0].length, 1)
 
-
 //   // await baseA.view.update()
 //   // await baseB.view.update()
 //   // await baseC.view.update()
@@ -130,7 +129,6 @@
 //   console.log('baseB.latest()', await baseB.latest())
 //   console.log('baseC.latest()', await baseC.latest())
 
-
 //   // await baseA.inputs[0].update()
 //   // await baseB.inputs[0].update()
 //   // await baseC.inputs[0].update()
@@ -138,7 +136,6 @@
 //   t.alike(await getValues(baseA), ['a.1'])
 //   t.alike(await getValues(baseB), ['a.1'])
 //   t.alike(await getValues(baseC), ['a.1'])
-
 
 //   // const baseA = new Autobase({
 //   //   inputs: [writerA, writerB, writerC]
@@ -171,10 +168,6 @@
 
 //   console.log('AUTOBASE TEST DONE')
 // })
-
-
-
-
 
 // // test('creating a document', async (t, createNode) => {
 // //   const node1 = await createNode()

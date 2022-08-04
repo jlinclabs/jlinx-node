@@ -1,9 +1,6 @@
 const test = require('brittle')
 const { timeout } = require('nonsynchronous')
 const _createTestnet = require('@hyperswarm/testnet')
-const Hyperswarm = require('hyperswarm')
-const Corestore = require('corestore')
-const ram = require('random-access-memory')
 const tmp = require('tmp-promise')
 const fs = require('node:fs/promises')
 const {
@@ -20,10 +17,10 @@ Object.assign(exports, {
   createSigningKeyPair,
   createTestnet,
   coreValues,
-  JlinxNode,
+  JlinxNode
 })
 
-async function createTestnet(t, size = 3){
+async function createTestnet (t, size = 3) {
   const testnet = await _createTestnet(size, t.teardown)
 
   const newTmpDir = async () => {
@@ -36,7 +33,7 @@ async function createTestnet(t, size = 3){
 
   testnet.createJlinxNodes = async (size = 2) => {
     const nodes = []
-    while(nodes.length < size){
+    while (nodes.length < size) {
       const node = new JlinxNode({
         topic: Buffer.from('_testing_jlinx_node_on_hypercore'),
         storagePath: await newTmpDir(),
@@ -49,13 +46,13 @@ async function createTestnet(t, size = 3){
     await Promise.all(
       nodes.map(node => node.connected())
     )
-    for (const node of nodes){
-      for (const otherNode of nodes){
+    for (const node of nodes) {
+      for (const otherNode of nodes) {
         if (node === otherNode) continue
-        t.ok(node.swarm.peers.has(otherNode.id), `node has peer`)
+        t.ok(node.swarm.peers.has(otherNode.id), 'node has peer')
       }
     }
-    for (const node of nodes){
+    for (const node of nodes) {
       await node.ready()
     }
     return nodes
@@ -64,9 +61,9 @@ async function createTestnet(t, size = 3){
   return testnet
 }
 
-async function coreValues(core){
+async function coreValues (core) {
   const values = []
-  for (let n = 0; n < core.length; n++){
+  for (let n = 0; n < core.length; n++) {
     values[n] = (await core.get(n)).toString()
   }
   return values
