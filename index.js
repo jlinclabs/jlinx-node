@@ -140,7 +140,9 @@ module.exports = class JlinxNode {
       secretKey
     })
 
-    return new Document(core, this)
+    const doc = new Document(core, this)
+    await doc.ready()
+    return doc
   }
 }
 
@@ -156,10 +158,37 @@ class Document {
   on (...args) { return this.core.on(...args) }
   once (...args) { return this.core.once(...args) }
   ready (...args) { return this.core.ready(...args) }
+  append (...args) { return this.core.append(...args) }
   async update (opts) {
+    await this.ready()
+    // await updateHarder(this.core)
     const done = this.core.findingPeers()
     await this.node.swarm.flush()
+    await this.core.update(opts)
     done()
-    return this.core.update(opts)
+  }
+
+  waitForLength (minLength = 0) {
+    return new Promise(resolve => {
+      if (this.length >= minLength) return resolve(this.length)
+      const onAppend = () => {
+        if (this.length >= minLength) {
+          this.removeListener('append', onAppend)
+          resolve(this.length)
+        }
+      }
+      this.on('append', onAppend)
+    })
   }
 }
+
+// // TODO move to utils
+// function updateHarder (core, ms = 20000) {
+//   return new Promise((resolve, reject) => {
+//     core.once('append', (error) => {
+//       if (error) reject(error); else resolve()
+//     })
+//     core.update()
+//     setTimeout(() => { resolve() }, ms)
+//   })
+// }

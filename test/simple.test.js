@@ -11,7 +11,6 @@ test('peer connect', async (t) => {
 
   const skp1 = createSigningKeyPair()
   const core1 = await node1.get(skp1.publicKey, skp1.secretKey)
-  await core1.ready()
 
   t.alike(core1.length, 0)
   t.ok(core1.writable)
@@ -21,13 +20,8 @@ test('peer connect', async (t) => {
   ])
   t.alike(core1.length, 2)
 
-  await timeout(10) // why?
-
   const core1copy = await node2.get(skp1.publicKey)
-  await core1copy.ready()
   await core1copy.update()
-
-  await core1copy.get(0) // why is this needed?
   t.alike(core1copy.length, 2)
 
   t.alike(
