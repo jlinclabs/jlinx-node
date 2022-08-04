@@ -67,6 +67,7 @@ test('corestore replication', async (t) => {
   const node1 = await createNode('node1')
   const node2 = await createNode('node2')
 
+  // Why doesnt this work?
   // const [node1, node2] = await Promise.all([
   //   createNode('node1'),
   //   createNode('node2'),
@@ -75,7 +76,6 @@ test('corestore replication', async (t) => {
   await connected
 
   await node1.cores.findingPeers()
-
 
   const core1 = node1.cores.get({ name: 'alfalpha' })
   await core1.append('one')

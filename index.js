@@ -51,7 +51,7 @@ module.exports = class JlinxNode {
   async _open () {
     await this.cores.ready()
     debug(`[${this.id}]`, 'connecting to swarm as', this.id)
-    await this.swarm.listen()
+    // await this.swarm.listen()
 
     const { default: exitHook } = await exitHookImport
     this._undoExitHook = exitHook(() => { this.destroy() })
@@ -64,7 +64,10 @@ module.exports = class JlinxNode {
       )
       // Is this what we want?
       this.cores.replicate(conn, {
-        keepAlive: true
+        keepAlive: true,
+        ondiscoverykey(...x){
+          console.log('!! ondiscoverykey', x)
+        },
         // live?
       })
     })
@@ -129,7 +132,11 @@ module.exports = class JlinxNode {
     return status
   }
 
-  async get (id, secretKey) {
-    return this.cores.get({ key: keyToBuffer(id), secretKey })
+  async get (id, secretKey, opts = {}) {
+    return this.cores.get({
+      ...opts,
+      key: keyToBuffer(id),
+      secretKey
+    })
   }
 }
