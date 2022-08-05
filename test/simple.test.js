@@ -71,8 +71,8 @@ test('document ids', async (t) => {
   for (const format of [publicKeyMultibase, jlinxId, publicKey]) {
     const doc = await node1.get(format)
     t.is(doc.id.toString(), jlinxId)
-    t.is(`${doc.id}`, jlinxId)
-    t.alike(doc.id.publicKey, publicKey)
+    t.is(doc.id, jlinxId)
+    t.alike(doc.publicKey, publicKey)
   }
 })
 

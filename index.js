@@ -141,15 +141,15 @@ module.exports = class JlinxNode {
       secretKey
     })
 
-    const doc = new Document(jlinxId, core, this)
+    const doc = new Document(jlinxId.toString(), core, this)
     await doc.ready()
     return doc
   }
 }
 
 class Document {
-  constructor (jlinxId, core, node) {
-    this.id = jlinxId
+  constructor (id, core, node) {
+    this.id = id
     this.core = core
     this.node = node
   }
