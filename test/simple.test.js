@@ -59,6 +59,23 @@ test('peer connect', async (t) => {
   t.alike(core1copy.length, 4)
 })
 
+test('document ids', async (t) => {
+  const { createJlinxNodes } = await createTestnet(t)
+  const [node1] = await createJlinxNodes(2)
+
+  const publicKeyAsHex = 'cdd0ae3ddae68928a13f07a6f3544442dd6b5a616a98f2b8e37f64c95d88f425'
+  const publicKeyMultibase = 'f' + publicKeyAsHex
+  const jlinxId = 'jlinx:' + publicKeyMultibase
+  const publicKey = Buffer.from(publicKeyAsHex, 'hex')
+
+  for (const format of [publicKeyMultibase, jlinxId, publicKey]) {
+    const doc = await node1.get(format)
+    t.is(doc.id.toString(), jlinxId)
+    t.is(`${doc.id}`, jlinxId)
+    t.alike(doc.id.publicKey, publicKey)
+  }
+})
+
 // test.solo('invalid keyPair', async (t) => {
 //   t.exception.all(() => { new JlinxNode({}) }, /this.storage is not a function/)
 

@@ -30,7 +30,7 @@
     "hypercore": "^10.0.0-alpha.55",
     "hypercore-crypto": "^3.2.1",
     "hyperswarm": "^4.2.0",
-    "jlinx-util": "github:jlinclabs/jlinx-util#a2b0141d4bc06412fd2c01940cf59d2249748a80",
+    "jlinx-util": "github:jlinclabs/jlinx-util#9d3c85929cee8f424dc2dc0a92eb6d9293315d89",
     "node-fetch": "^3.2.10",
     "urlsafe-base64": "^1.0.0"
   },

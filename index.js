@@ -2,7 +2,7 @@ const Debug = require('debug')
 const Corestore = require('corestore')
 const Hyperswarm = require('hyperswarm')
 const {
-  keyToBuffer,
+  JlinxId,
   validateSigningKeyPair
 } = require('jlinx-util')
 const exitHookImport = import('exit-hook')
@@ -134,24 +134,27 @@ module.exports = class JlinxNode {
   }
 
   async get (id, secretKey, opts = {}) {
+    const jlinxId = new JlinxId(id)
     const core = this.cores.get({
       ...opts,
-      key: keyToBuffer(id),
+      key: jlinxId.publicKey,
       secretKey
     })
 
-    const doc = new Document(core, this)
+    const doc = new Document(jlinxId, core, this)
     await doc.ready()
     return doc
   }
 }
 
 class Document {
-  constructor (core, node) {
+  constructor (jlinxId, core, node) {
+    this.id = jlinxId
     this.core = core
     this.node = node
   }
 
+  get publicKey () { return this.core.key }
   get length () { return this.core.length }
   get writable () { return this.core.writable }
   get (...args) { return this.core.get(...args) }
@@ -159,6 +162,18 @@ class Document {
   once (...args) { return this.core.once(...args) }
   ready (...args) { return this.core.ready(...args) }
   append (...args) { return this.core.append(...args) }
+
+  [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
+    let indent = ''
+    if (typeof opts.indentationLvl === 'number') { while (indent.length < opts.indentationLvl) indent += ' ' }
+
+    return this.constructor.name + '(\n' +
+      indent + '  id: ' + opts.stylize(this.id, 'string') + '\n' +
+      indent + '  length: ' + opts.stylize(this.length, 'number') + '\n' +
+      // indent + '  host: ' + opts.stylize(this.node.host.url, 'string') + '\n' +
+      indent + ')'
+  }
+
   async update (opts) {
     await this.ready()
     // await updateHarder(this.core)
