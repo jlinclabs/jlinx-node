@@ -162,6 +162,7 @@ class Document {
   once (...args) { return this.core.once(...args) }
   ready (...args) { return this.core.ready(...args) }
   append (...args) { return this.core.append(...args) }
+  close (...args) { return this.core.close(...args) }
 
   [Symbol.for('nodejs.util.inspect.custom')] (depth, opts) {
     let indent = ''
