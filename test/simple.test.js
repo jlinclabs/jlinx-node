@@ -1,16 +1,17 @@
+const jtil = require('jlinx-util')
 const {
   test,
   createTestnet,
-  timeout,
-  createSigningKeyPair
+  timeout
+
 } = require('./helpers/index.js')
 
 test('peer connect', async (t) => {
   const { createJlinxNodes } = await createTestnet(t)
   const [node1, node2] = await createJlinxNodes(2)
 
-  const skp1 = createSigningKeyPair()
-  const core1 = await node1.get(skp1.publicKey, skp1.secretKey)
+  const skp1 = node1.createIdAndSecret()
+  const core1 = await node1.get(skp1.id, skp1.secretKey)
 
   t.alike(core1.length, 0)
   t.ok(core1.writable)
@@ -20,7 +21,7 @@ test('peer connect', async (t) => {
   ])
   t.alike(core1.length, 2)
 
-  const core1copy = await node2.get(skp1.publicKey)
+  const core1copy = await node2.get(skp1.id)
   await core1copy.update()
   t.alike(core1copy.length, 2)
 
@@ -61,19 +62,18 @@ test('peer connect', async (t) => {
 
 test('document ids', async (t) => {
   const { createJlinxNodes } = await createTestnet(t)
-  const [node1] = await createJlinxNodes(2)
+  const [node] = await createJlinxNodes(2)
 
-  const publicKeyAsHex = 'cdd0ae3ddae68928a13f07a6f3544442dd6b5a616a98f2b8e37f64c95d88f425'
-  const publicKeyMultibase = 'f' + publicKeyAsHex
-  const jlinxId = 'jlinx:' + publicKeyMultibase
-  const publicKey = Buffer.from(publicKeyAsHex, 'hex')
+  const keys = node.createIdAndSecret()
+  t.ok(jtil.validateSigningKeyPair(keys))
+  t.ok(keys.id.startsWith('jlinx:'))
+  t.is(keys.id, jtil.publicKeyToJlinxId(keys.publicKey))
+  t.alike(jtil.jlinxIdToPublicKey(keys.id), keys.publicKey)
 
-  for (const format of [publicKeyMultibase, jlinxId, publicKey]) {
-    const doc = await node1.get(format)
-    t.is(doc.id.toString(), jlinxId)
-    t.is(doc.id, jlinxId)
-    t.alike(doc.publicKey, publicKey)
-  }
+  const doc = await node.get(keys.id)
+  t.is(doc.id, keys.id)
+  t.alike(doc.publicKey, keys.publicKey)
+  t.is(doc.secretKey, undefined)
 })
 
 // test.solo('invalid keyPair', async (t) => {

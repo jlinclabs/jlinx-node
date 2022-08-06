@@ -1,10 +1,7 @@
 const Debug = require('debug')
 const Corestore = require('corestore')
 const Hyperswarm = require('hyperswarm')
-const {
-  JlinxId,
-  validateSigningKeyPair
-} = require('jlinx-util')
+const jtil = require('jlinx-util')
 const exitHookImport = import('exit-hook')
 
 const debug = Debug('jlinx:node')
@@ -18,7 +15,7 @@ module.exports = class JlinxNode {
     this.topic = opts.topic || DEFAULT_TOPIC
     this.storagePath = opts.storagePath
     this.cores = new Corestore(this.storagePath)
-    if (!opts.keyPair || !validateSigningKeyPair(opts.keyPair)) {
+    if (!opts.keyPair || !jtil.validateSigningKeyPair(opts.keyPair)) {
       throw new Error('invaid keyPair')
     }
     this.id = opts.keyPair.publicKey.toString('hex')
@@ -133,15 +130,20 @@ module.exports = class JlinxNode {
     return status
   }
 
+  createIdAndSecret () {
+    const kp = jtil.createSigningKeyPair()
+    kp.id = jtil.publicKeyToJlinxId(kp.publicKey)
+    return kp
+  }
+
   async get (id, secretKey, opts = {}) {
-    const jlinxId = new JlinxId(id)
     const core = this.cores.get({
       ...opts,
-      key: jlinxId.publicKey,
+      key: jtil.jlinxIdToPublicKey(id),
       secretKey
     })
 
-    const doc = new Document(jlinxId.toString(), core, this)
+    const doc = new Document(id, core, this)
     await doc.ready()
     return doc
   }

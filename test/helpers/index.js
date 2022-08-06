@@ -3,18 +3,13 @@ const { timeout } = require('nonsynchronous')
 const _createTestnet = require('@hyperswarm/testnet')
 const tmp = require('tmp-promise')
 const fs = require('node:fs/promises')
-const {
-  keyToString,
-  createSigningKeyPair
-} = require('jlinx-util')
+const jtil = require('jlinx-util')
 
 const JlinxNode = require('../..')
 
 Object.assign(exports, {
   test,
   timeout,
-  keyToString,
-  createSigningKeyPair,
   createTestnet,
   coreValues,
   JlinxNode
@@ -38,7 +33,7 @@ async function createTestnet (t, size = 3) {
         topic: Buffer.from('_testing_jlinx_node_on_hypercore'),
         storagePath: await newTmpDir(),
         bootstrap: testnet.bootstrap,
-        keyPair: createSigningKeyPair()
+        keyPair: jtil.createSigningKeyPair()
       })
       t.teardown(() => { node.destroy() })
       nodes.push(node)
